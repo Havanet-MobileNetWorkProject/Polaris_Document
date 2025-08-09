@@ -1,0 +1,86 @@
+\documentclass{report}
+\usepackage{ptext}
+\usepackage{lipsum}
+\usepackage{graphicx}
+\usepackage{ptext}
+
+\input{Boostan-UserManual}
+
+\input{Chapters/BWords}
+\input{Chapters/abbre}
+
+\title{مستند راه اندازی پروژه نهایی درس شبکه های تلفن همراه}
+\type{مستند }
+\author{زهرا دهقان\\اسماء حمید\\فاطمه شرح دهی مقدم}
+
+\logofile{Pic/logo}
+
+
+\begin{document}
+
+\pagenumbering{gobble}
+\Godpage
+\maketitle
+\pagenumbering{arabic}
+\tableofcontents
+
+
+\chapter{مقدمه}
+
+
+
+
+
+
+
+
+\chapter{ \lr{Server-side Component}}
+
+\chapter{ \lr{Web Application}}
+
+\chapter{ \lr{Android Mobile}}
+
+\section{تنظیم IP بک‌اند در اپلیکیشن اندروید}
+
+
+برای اتصال اپلیکیشن به بک‌اند در محیط local، بک‌اند و موبایل باید در یک شبکه باشند. سپس آدرس IP سیستم میزبان بک‌اند را با دستور \textbf{ipconfig} در CMD پیدا کنید:
+
+\vspace{0.3cm}
+
+آدرس \lr{IPV4} را یادداشت کرده و در دو محل زیر جایگزین کنید:
+
+\begin{enumerate}
+	\item \textbf{SharedViewModel.kt}\\
+	مسیر: \\
+		\begin{latin}
+	\texttt{app/src/main/java/com/example/Havanet/viewmodels/SharedViewModel.kt}\\
+\end{latin}
+مقدار موجود در خط شماره پانزده، عبارت از:
+\begin{latin}
+\begin{lstlisting}[mathescape=true, numbers=left, firstnumber=15]
+val ip = "10.13.148.180"
+\end{lstlisting}
+\end{latin}
+	را با IP جدید جایگزین کنید.
+	
+	\item \textbf{network\_security\_config.xml}\\
+	مسیر: \\
+		\begin{latin}
+	\texttt{app/src/main/res/xml/network\_security\_config.xml}\\
+		\end{latin}
+	مقدار موجود در خط شماره چهار، عبارت از:
+\begin{latin}
+	\begin{lstlisting}[mathescape=true, numbers=left, firstnumber=4]
+<domain includeSubdomains="true">10.13.148.180</domain>
+	\end{lstlisting}
+\end{latin}
+	را با IP جدید جایگزین کنید.
+\end{enumerate}
+
+
+
+ 
+\end{document}
+
+
+
