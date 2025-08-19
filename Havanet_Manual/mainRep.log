@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2025.7.2)  9 AUG 2025 23:44
+This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2025.7.2)  20 AUG 2025 00:30
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -2165,58 +2165,78 @@ LaTeX Font Info:    Font shape `TU/IRNazanin(0)/m/n' will be
 LaTeX Font Info:    Font shape `TU/IRNazanin(0)/b/n' will be
 (Font)              scaled to size 17.99998pt on input line 43.
 LaTeX Font Info:    Font shape `TU/LinuxLibertine(0)/m/n' will be
-(Font)              scaled to size 11.00006pt on input line 50.
+(Font)              scaled to size 11.00006pt on input line 49.
 
-Underfull \hbox (badness 10000) in paragraph at lines 53--55
+Underfull \hbox (badness 10000) in paragraph at lines 52--54
 [][]
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 56--57
+Underfull \hbox (badness 10000) in paragraph at lines 55--56
 [][]
  []
 
 LaTeX Font Info:    Font shape `TU/LinuxLibertine(0)/m/n' will be
-(Font)              scaled to size 8.80005pt on input line 61.
+(Font)              scaled to size 8.80005pt on input line 60.
 
-Underfull \hbox (badness 10000) in paragraph at lines 66--68
+Underfull \hbox (badness 10000) in paragraph at lines 65--67
 [][]
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 69--70
+Underfull \hbox (badness 10000) in paragraph at lines 68--69
 [][]
  []
+
+[5
+
+]
+Overfull \hbox (19.94768pt too wide) in paragraph at lines 123--124
+[][]\TU/IRNazanin(0)/b/n/10 تکنولوژی\TU/IRNazanin(0)/m/n/10 : یک منوی کشویی که 
+به شما امکان انتخاب نوع شبکه را می‌دهد. گزینه‌های موجود عبارت‌اند از []\TU/Linu
+xLibertine(0)/m/n/10 2G[]\TU/IRNazanin(0)/m/n/10 ،[]\TU/LinuxLibertine(0)/m/n/1
+0 3G[]\TU/IRNazanin(0)/m/n/10 ،[]\TU/LinuxLibertine(0)/m/n/10 4G[]\TU/IRNazanin
+(0)/m/n/10 ،[]\TU/LinuxLibertine(0)/m/n/10 5G[]\TU/IRNazanin(0)/m/n/10 . []
+ []
+
+[6]
+File: Pic/setting.jpg Graphic file (type bmp)
+<Pic/setting.jpg>
+LaTeX Font Info:    Font shape `TU/IRNazanin(0)/m/n' will be
+(Font)              scaled to size 11.25pt on input line 152.
+File: Pic/info.jpg Graphic file (type bmp)
+<Pic/info.jpg>
+ [7] [8] [9]
+Underfull \hbox (badness 10000) in paragraph at lines 199--204
+[][]
+ []
+
+File: Pic/test.jpg Graphic file (type bmp)
+<Pic/test.jpg>
+[10]
+File: Pic/profile.jpg Graphic file (type bmp)
+<Pic/profile.jpg>
 
 
 Package glossaries Warning: No \printglossary or \printglossaries found. 
 (Remove \makeglossaries if you don't want any glossaries.) 
 This document will not have a glossary.
 
-[5
-
-] (./mainRep.aux)
+[11] (./mainRep.aux)
  ***********
 LaTeX2e <2023-11-01> patch level 1
 L3 programming layer <2024-02-20>
  ***********
-
-
-Package rerunfilecheck Warning: File `mainRep.out' has changed.
-(rerunfilecheck)                Rerun to get outlines right
-(rerunfilecheck)                or use package `bookmark'.
-
-Package rerunfilecheck Info: Checksums for `mainRep.out':
-(rerunfilecheck)             Before: 5A2EFDDADA3CE2C5024BBCDBC57660E6;1322
-(rerunfilecheck)             After:  3FED515AEA38AE6411AA9DD705FA8FFD;1079.
+Package rerunfilecheck Info: File `mainRep.out' has not changed.
+(rerunfilecheck)             Checksum: 9751F0291FFF0FEF55B0DB9E4E07EAEC;2198.
  ) 
 Here is how much of TeX's memory you used:
- 39358 strings out of 474773
- 773842 string characters out of 5761290
+ 39471 strings out of 474773
+ 776054 string characters out of 5761290
  1938842 words of memory out of 5000000
- 60585 multiletter control sequences out of 15000+600000
- 562036 words of font info for 120 fonts, out of 8000000 for 9000
+ 60693 multiletter control sequences out of 15000+600000
+ 562044 words of font info for 121 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
  96i,9n,119p,2431b,1359s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on mainRep.pdf (7 pages).
+Output written on mainRep.pdf (13 pages).
