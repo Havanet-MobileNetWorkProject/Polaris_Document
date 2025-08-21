@@ -34,7 +34,165 @@
 
 
 
-\chapter{ \lr{Server-side Component}}
+\chapter{ \lr{Polaris Server}}
+
+\chapter{Polaris Server}
+\section{Authentication}
+
+\subsection{Register API (ثبت‌نام کاربر)}
+\textbf{مدل (User Model)} \\
+مدل کاربر برای سامانه Polaris به شکل زیر طراحی شده است:
+
+\begin{itemize}
+  \item \lr{phone}: شماره تلفن کاربر (یونیک و به‌عنوان نام کاربری استفاده می‌شود).
+  \item \lr{role}: نقش کاربر که می‌تواند \lr{user} یا \lr{admin} باشد (پیش‌فرض: \lr{user}).
+  \item \lr{is\_active}: تعیین فعال بودن کاربر.
+  \item \lr{is\_staff}: برای تشخیص دسترسی مدیریتی.
+\end{itemize}
+
+کاربران عادی نقش \lr{user} دارند و مدیران (\lr{superuser}) نقش \lr{admin}. \\
+همچنین یک \lr{UserManager} پیاده‌سازی شده تا:
+\begin{itemize}
+  \item تابع \lr{create\_user}: کاربر عادی بسازد.
+  \item تابع \lr{create\_superuser}: ادمین بسازد.
+\end{itemize}
+
+\textbf{Serializer (RegisterSerializer)} \\
+کلاس \lr{RegisterSerializer} برای اعتبارسنجی داده‌های ورودی ثبت‌نام استفاده می‌شود:
+\begin{itemize}
+  \item فقط دو فیلد دریافت می‌کند: \lr{phone} و \lr{password}.
+  \item \lr{password} فقط نوشتنی (\lr{write\_only}) است.
+  \item تابع \lr{create}: از متد \lr{create\_user} در \lr{UserManager} استفاده می‌کند.
+\end{itemize}
+
+\textbf{View (RegisterView)} \\
+کلاس \lr{RegisterView} یک \lr{APIView} است که درخواست‌های POST را پردازش می‌کند:
+\begin{itemize}
+  \item داده‌های ورودی توسط \lr{RegisterSerializer} بررسی می‌شود.
+  \item اگر معتبر بود: کاربر ساخته می‌شود و توکن‌های JWT صادر می‌گردد.
+  \item خروجی شامل توکن‌ها + اطلاعات کاربر است.
+\end{itemize}
+
+\textbf{ورودی (POST /auth/signup/)}:
+\begin{lstlisting}[language=json]
+{
+  "phone": "09123456789",
+  "password": "test1234"
+}
+\end{lstlisting}
+
+\textbf{خروجی موفق (201)}:
+\begin{lstlisting}[language=json]
+{
+  "refresh": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1...",
+  "access": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1...",
+  "user": {
+    "id": 1,
+    "phone": "09123456789",
+    "role": "user"
+  }
+}
+\end{lstlisting}
+
+\textbf{خروجی ناموفق (400)}:
+\begin{lstlisting}[language=json]
+{
+  "phone": ["This field must be unique."]
+}
+\end{lstlisting}
+
+
+\subsection{Login API (ورود کاربر)}
+\textbf{View (LoginView)} \\
+\begin{itemize}
+  \item درخواست POST می‌گیرد.
+  \item شماره تلفن و رمز عبور را بررسی می‌کند.
+  \item در صورت معتبر بودن، توکن‌های JWT صادر می‌کند.
+  \item اطلاعات کاربر بازگردانده می‌شود.
+\end{itemize}
+
+\textbf{ورودی (POST /auth/login/)}:
+\begin{lstlisting}[language=json]
+{
+  "phone": "09123456789",
+  "password": "test1234"
+}
+\end{lstlisting}
+
+\textbf{خروجی موفق (200)}:
+\begin{lstlisting}[language=json]
+{
+  "refresh": "eyJ0eXAiOiJKV1QiLCJh...",
+  "access": "eyJ0eXAiOiJKV1QiLCJh...",
+  "user": {
+    "id": 1,
+    "phone": "09123456789",
+    "role": "user"
+  }
+}
+\end{lstlisting}
+
+\textbf{خروجی ناموفق (401)}:
+\begin{lstlisting}[language=json]
+{
+  "error": "Invalid credentials"
+}
+\end{lstlisting}
+
+
+\subsection{Logout API (خروج کاربر)}
+\textbf{View (LogoutView)} \\
+\begin{itemize}
+  \item درخواست POST دریافت می‌کند.
+  \item کاربر باید توکن \lr{refresh} را ارسال کند.
+  \item توکن بلاک‌لیست می‌شود.
+\end{itemize}
+
+\textbf{ورودی (POST /auth/logout/)}:
+\begin{lstlisting}[language=json]
+{
+  "refresh": "eyJ0eXAiOiJKV1QiLCJh..."
+}
+\end{lstlisting}
+
+\textbf{خروجی موفق (205)}: (بدون بدنه) \\
+\textbf{خروجی ناموفق (400)}: (بدون بدنه)
+
+
+\subsection{Profile API (نمایه کاربر)}
+\textbf{Serializer (UserSerializer)} \\
+برای نمایش اطلاعات کاربر از \lr{UserSerializer} استفاده می‌شود (شامل \lr{id}, \lr{phone}, \lr{role}).
+
+\textbf{View (ProfileView)} \\
+\begin{itemize}
+  \item درخواست GET دریافت می‌کند.
+  \item نیاز به احراز هویت دارد.
+  \item اطلاعات کاربر لاگین‌شده بازگردانده می‌شود.
+\end{itemize}
+
+\textbf{ورودی (GET /auth/profile/)}: بدون بدنه (توکن در Header). \\
+
+\textbf{خروجی موفق (200)}:
+\begin{lstlisting}[language=json]
+{
+  "id": 1,
+  "phone": "09123456789",
+  "role": "user"
+}
+\end{lstlisting}
+
+\textbf{خروجی ناموفق (401)}:
+\begin{lstlisting}[language=json]
+{
+  "detail": "Authentication credentials were not provided."
+}
+\end{lstlisting}
+
+
+
+
+
+
 
 \chapter{ \lr{Polaris Client}}
 
