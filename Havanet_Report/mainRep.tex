@@ -36,10 +36,10 @@
 
 \chapter{ \lr{Polaris Server}}
 
-\section{Authentication}
+\section{\lr{Authentication}}
 
 \subsection{\lr{Register API} (ثبت‌نام کاربر)}
-\textbf{مدل (User Model)} \\
+\textbf{مدل \lr{(User Model)}} \\
 مدل کاربر برای سامانه Polaris به شکل زیر طراحی شده است:
 
 \begin{itemize}
@@ -55,8 +55,11 @@
   \item تابع \lr{create\_user}: کاربر عادی بسازد.
   \item تابع \lr{create\_superuser}: ادمین بسازد.
 \end{itemize}
+
+
 \begin{lstlisting}[language=python]
-class UserManager(BaseUserManager):
+{
+  class UserManager(BaseUserManager):
     def create_user(self, phone, password=None, **extra_fields):
         if not phone:
             raise ValueError("Phone number is required")
@@ -90,7 +93,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.phone
 
+}
 \end{lstlisting}
+
+
 \textbf{Serializer (RegisterSerializer)} \\
 کلاس \lr{RegisterSerializer} برای اعتبارسنجی داده‌های ورودی ثبت‌نام استفاده می‌شود:
 \begin{itemize}
@@ -98,6 +104,20 @@ class User(AbstractBaseUser, PermissionsMixin):
   \item \lr{password} فقط نوشتنی (\lr{write\_only}) است.
   \item تابع \lr{create}: از متد \lr{create\_user} در \lr{UserManager} استفاده می‌کند.
 \end{itemize}
+
+\begin{lstlisting}[language=python ]
+{
+  class RegisterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['phone', 'password']
+        extra_kwargs = {'password': {'write_only': True}}
+
+    def create(self, validated_data):
+        return User.objects.create_user(**validated_data)
+
+}
+\end{lstlisting}
 
 \textbf{View (RegisterView)} \\
 کلاس \lr{RegisterView} یک \lr{APIView} است که درخواست‌های POST را پردازش می‌کند:
@@ -107,7 +127,25 @@ class User(AbstractBaseUser, PermissionsMixin):
   \item خروجی شامل توکن‌ها + اطلاعات کاربر است.
 \end{itemize}
 
-\textbf{ورودی (POST /auth/signup/)}:
+\begin{lstlisting}[language=python ]
+{
+  class RegisterView(APIView):
+    def post(self, request):
+        serializer = RegisterSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            refresh = RefreshToken.for_user(user)
+            return Response({
+                "refresh": str(refresh),
+                "access": str(refresh.access_token),
+                "user": UserSerializer(user).data
+            }, status=201)
+        return Response(serializer.errors, status=400)
+
+}
+\end{lstlisting}
+
+\textbf{ورودی \lr{(POST /auth/signup/)}}:
 \begin{lstlisting}[language=json]
 {
   "phone": "09123456789",
@@ -115,7 +153,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 }
 \end{lstlisting}
 
-\textbf{خروجی موفق (201)}:
+\textbf{خروجی موفق \lr{(201)}}:
 \begin{lstlisting}[language=json]
 {
   "refresh": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1...",
@@ -128,7 +166,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 }
 \end{lstlisting}
 
-\textbf{خروجی ناموفق (400)}:
+\textbf{خروجی ناموفق \lr{(400)}}:
 \begin{lstlisting}[language=json]
 {
   "phone": ["This field must be unique."]
@@ -139,7 +177,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 پس از ثبت‌نام هر کاربر جدید، یک سیگنال \lr{post\_save} در جنگو اجرا می‌شود. این سیگنال باعث می‌شود که به‌طور خودکار مجموعه‌ای از \lr{ThresholdParameter} و \lr{ThresholdLevel} برای کاربر ایجاد گردد.
 
 \textbf{کلیت Threshold} \\
-جزئیات کامل ساختار و کاربرد \lr{Threshold}ها در فصل مربوط به Thresholds توضیح داده خواهد شد. 
+جزئیات کامل ساختار و کاربرد \lr{Threshold}ها در فصل مربوط به \lr{Thresholds API} توضیح داده خواهد شد. 
 در این بخش تنها نحوه‌ی ایجاد پیش‌فرض‌ها هنگام ثبت‌نام بیان می‌شود.
 
 \textbf{Signal (create\_default\_thresholds)} \\
@@ -150,33 +188,12 @@ class User(AbstractBaseUser, PermissionsMixin):
   \item برای هر پارامتر چندین سطح (\lr{ThresholdLevel}) با بازه مقادیر و رنگ مشخص ایجاد می‌شود.
 \end{itemize}
 
-\textbf{کد سیگنال (نمونه)}:
-\begin{lstlisting}[language=python]
-@receiver(post_save, sender=User)
-def create_default_thresholds(sender, instance, created, **kwargs):
-    if created and instance.role == "user":
-        for tech, params in default_thresholds.items():
-            for p in params:
-                param = ThresholdParameter.objects.create(
-                    user=instance,
-                    name=p["name"],
-                    technology=tech,
-                    signal_type=p["signal_type"],
-                )
-                for lvl in p["levels"]:
-                    ThresholdLevel.objects.create(
-                        parameter=param,
-                        level=lvl["level"],
-                        color=lvl["color"],
-                        min_value=lvl["min"],
-                        max_value=lvl["max"],
-                    )
-\end{lstlisting}
+
 
 \textbf{مقادیر پیش‌فرض (\lr{default\_thresholds})} \\
 این مقادیر برای هر فناوری از قبل تعریف شده‌اند.
 
-\textbf{نمونه برای 2G}:
+\textbf{نمونه برای \lr{2G}}:
 \begin{lstlisting}[language=json]
 "2G": [
   {
@@ -198,7 +215,7 @@ def create_default_thresholds(sender, instance, created, **kwargs):
 
 
 \subsection{Login API (ورود کاربر)}
-\textbf{View (LoginView)} \\
+\textbf{View \lr{(LoginView)}} \\
 \begin{itemize}
   \item درخواست POST می‌گیرد.
   \item شماره تلفن و رمز عبور را بررسی می‌کند.
@@ -206,7 +223,7 @@ def create_default_thresholds(sender, instance, created, **kwargs):
   \item اطلاعات کاربر بازگردانده می‌شود.
 \end{itemize}
 
-\textbf{ورودی (POST /auth/login/)}:
+\textbf{ورودی \lr{(POST /auth/login/)}}:
 \begin{lstlisting}[language=json]
 {
   "phone": "09123456789",
@@ -214,7 +231,7 @@ def create_default_thresholds(sender, instance, created, **kwargs):
 }
 \end{lstlisting}
 
-\textbf{خروجی موفق (200)}:
+\textbf{خروجی موفق \lr{(200)}}:
 \begin{lstlisting}[language=json]
 {
   "refresh": "eyJ0eXAiOiJKV1QiLCJh...",
@@ -227,7 +244,7 @@ def create_default_thresholds(sender, instance, created, **kwargs):
 }
 \end{lstlisting}
 
-\textbf{خروجی ناموفق (401)}:
+\textbf{خروجی ناموفق \lr{(401)}}:
 \begin{lstlisting}[language=json]
 {
   "error": "Invalid credentials"
@@ -235,7 +252,7 @@ def create_default_thresholds(sender, instance, created, **kwargs):
 \end{lstlisting}
 
 
-\subsection{Logout API (خروج کاربر)}
+\subsection{\lr{Logout API} (خروج کاربر)}
 \textbf{View (LogoutView)} \\
 \begin{itemize}
   \item درخواست POST دریافت می‌کند.
@@ -243,18 +260,18 @@ def create_default_thresholds(sender, instance, created, **kwargs):
   \item توکن بلاک‌لیست می‌شود.
 \end{itemize}
 
-\textbf{ورودی (POST /auth/logout/)}:
+\textbf{ورودی \lr{(POST /auth/logout/)}}:
 \begin{lstlisting}[language=json]
 {
   "refresh": "eyJ0eXAiOiJKV1QiLCJh..."
 }
 \end{lstlisting}
 
-\textbf{خروجی موفق (205)}: (بدون بدنه) \\
-\textbf{خروجی ناموفق (400)}: (بدون بدنه)
+\textbf{خروجی موفق \lr{(205)}}: (بدون بدنه) \\
+\textbf{خروجی ناموفق \lr{(400)}}: (بدون بدنه)
 
 
-\subsection{Profile API (نمایه کاربر)}
+\subsection{\lr{Profile API} (نمایه کاربر)}
 \textbf{Serializer (UserSerializer)} \\
 برای نمایش اطلاعات کاربر از \lr{UserSerializer} استفاده می‌شود (شامل \lr{id}, \lr{phone}, \lr{role}).
 
@@ -265,9 +282,9 @@ def create_default_thresholds(sender, instance, created, **kwargs):
   \item اطلاعات کاربر لاگین‌شده بازگردانده می‌شود.
 \end{itemize}
 
-\textbf{ورودی (GET /auth/profile/)}: بدون بدنه (توکن در Header). \\
+\textbf{ورودی \lr{(GET /auth/profile/)}}:   \\
 
-\textbf{خروجی موفق (200)}:
+\textbf{خروجی موفق \lr{(200)}}:
 \begin{lstlisting}[language=json]
 {
   "id": 1,
@@ -276,21 +293,20 @@ def create_default_thresholds(sender, instance, created, **kwargs):
 }
 \end{lstlisting}
 
-\textbf{خروجی ناموفق (401)}:
+\textbf{خروجی ناموفق \lr{(401)}}:
 \begin{lstlisting}[language=json]
 {
   "detail": "Authentication credentials were not provided."
 }
 \end{lstlisting}
 
-\section{CellInfo API}
-برای ثبت و دریافت اطلاعات سیگنال سلولی کاربران طراحی شده است. این API انواع شبکه‌ها را پشتیبانی می‌کند: 2G, 3G, 4G, 5G. کاربران باید احراز هویت شده باشند (\texttt{IsAuthenticated}) تا بتوانند داده‌ها را ارسال یا دریافت کنند.
+\section{\lr{CellInfo API}}
+برای ثبت و دریافت اطلاعات سیگنال سلولی کاربران طراحی شده است. این API انواع شبکه‌ها را پشتیبانی می‌کند: \lr{2G}, \lr{3G}, \lr{4G}, \lr{5G}. کاربران باید احراز هویت شده باشند (\texttt{IsAuthenticated}) تا بتوانند داده‌ها را ارسال یا دریافت کنند.
 
 \section{دسته‌بندی کاربران}
 \begin{itemize}
     \item \textbf{کاربران عادی:} فقط داده‌های خودشان را می‌بینند.
     \item \textbf{ادمین‌ها:} می‌توانند داده همه کاربران را مشاهده کنند و در صورت نیاز با پارامتر \texttt{client\_id} فیلتر کنند.
-    \item \textbf{Pagination:} \texttt{GET} شامل تعداد کل، تعداد صفحات، صفحه جاری و نتایج است.
 \end{itemize}
 
 \section{مدل‌ها}
@@ -299,82 +315,82 @@ def create_default_thresholds(sender, instance, created, **kwargs):
 \subsection{BaseSignalTest}
 \begin{itemize}
     \item \texttt{timestamp (DateTimeField)}: زمان ثبت سیگنال
-    \item \texttt{technology (CharField)}: نوع تکنولوژی سلولی. گزینه‌ها: 'GSM', 'GPRS', 'EDGE', 'UMTS', 'HSPA', 'HSPA+', 'LTE', 'LTE-Adv', '5G'
+    \item \texttt{technology (CharField)}: نوع تکنولوژی سلولی. گزینه‌ها: 'GSM', 'GPRS', 'EDGE', 'UMTS', 'HSPA', 'HSPA+', 'LTE', 'LTE-Adv', \lr{'5G'}
     \item \texttt{latitude} و \texttt{longitude (FloatField)}: موقعیت جغرافیایی سیگنال
     \item \texttt{plmn\_id (CharField)}: شناسه شبکه تلفن همراه
     \item \texttt{cell\_id (BigIntegerField)}: شناسه سلول
-    \item \texttt{arfcn (IntegerField, optional)}: فرکانس رادیویی
-    \item \texttt{band (IntegerField, optional)}: باند فرکانسی
+    \item \texttt{arfcn \lr{(IntegerField, optional)}}: فرکانس رادیویی
+    \item \texttt{band \leftarrow{(IntegerField, optional)}}: باند فرکانسی
 \end{itemize}
 
 \subsubsection{Property Generation}
 \begin{itemize}
-    \item \textbf{2G:} GSM, GPRS, EDGE
-    \item \textbf{3G:} UMTS, HSPA, HSPA+
-    \item \textbf{4G:} LTE, LTE-Adv
-    \item \textbf{5G:} 5G
-    \item \textbf{Unknown:} سایر مقادیر
+    \item \textbf{\lr{2G}:} \lr{GSM, GPRS, EDGE}
+    \item \textbf{\lr{3G}:} \lr{UMTS, HSPA, HSPA+}
+    \item \textbf{\lr{4G}:} \lr{LTE, LTE-Adv}
+    \item \textbf{\lr{5G}:} \lr{5G}
+    \item \textbf{\lr{Unknown}:} سایر مقادیر
 \end{itemize}
 
 \subsection{مدل‌های اختصاصی هر نسل}
 
-\subsubsection{SignalTest2G}
+\subsubsection{\lr{SignalTest2G}}
 \begin{itemize}
     \item ارث‌بری از \texttt{BaseSignalTest}
-    \item \texttt{user (ForeignKey → User)}: کاربر ثبت‌کننده
-    \item \texttt{lac (IntegerField)}: کد منطقه سلولی
-    \item \texttt{rxlev (FloatField, optional)}: قدرت سیگنال
+    \item \texttt{\lr{{user (ForeignKey → User)}}}: کاربر ثبت‌کننده
+    \item \texttt{\lr{lac (IntegerField)}}: کد منطقه سلولی
+    \item \texttt{\lr{rxlev (FloatField, optional)}}: قدرت سیگنال
 \end{itemize}
 
-\subsubsection{SignalTest3G}
+\subsubsection{\lr{SignalTest3G}}
 \begin{itemize}
-    \item \texttt{user (ForeignKey → User)}
-    \item \texttt{lac (IntegerField)}
-    \item \texttt{rscp (FloatField)}: قدرت سیگنال رادیویی
-    \item \texttt{node\_id (BigIntegerField)}: شناسه Node
+    \item \texttt{\lr{user (ForeignKey → User)}}: کاربر ثبت‌کننده
+    \item \texttt{\lr{lac (IntegerField)}}: کد منطقه سلولی
+    \item \texttt{\lr{rscp (FloatField)}}: قدرت سیگنال رادیویی
+    \item \texttt{\lr{node\_id (BigIntegerField)}}: شناسه Node
 \end{itemize}
 
 \subsubsection{SignalTest4G}
 \begin{itemize}
-    \item \texttt{user (ForeignKey → User)}
-    \item \texttt{tac (IntegerField)}: کد منطقه تکنولوژی LTE
-    \item \texttt{rsrp (FloatField)}: قدرت سیگنال LTE
-    \item \texttt{rsrq (FloatField, optional)}: کیفیت سیگنال LTE
-    \item \texttt{node\_id (BigIntegerField)}
+    \item \texttt{\lr{user (ForeignKey → User)}}
+    \item \texttt{\lr{tac (IntegerField)}}: کد منطقه تکنولوژی LTE
+    \item \texttt{\lr{rsrp (FloatField)}}: قدرت سیگنال LTE
+    \item \texttt{\lr{rsrq (FloatField, optional)}}: کیفیت سیگنال LTE
+    \item \texttt{\lr{node\_id (BigIntegerField)}}
 \end{itemize}
 
-\subsubsection{SignalTest5G}
-مشابه 4G، شامل \texttt{tac}, \texttt{rsrp}, \texttt{rsrq}, \texttt{node\_id}
+\subsubsection{\lr{SignalTest5G}}
+مشابه \lr{4G} شامل \texttt{tac}, \texttt{rsrp}, \texttt{rsrq}, \texttt{node\_id}
 
-\section{Serializerها}
+\section{Serilizers}
 \begin{itemize}
     \item \texttt{SignalTest2GSerializer, SignalTest3GSerializer, SignalTest4GSerializer, SignalTest5GSerializer}
     \begin{itemize}
         \item نقش: تبدیل داده‌های مدل به JSON و اعتبارسنجی داده‌های ورودی
         \item فیلد \texttt{user} فقط خواندنی است و هنگام POST از کاربر جاری پر می‌شود
-        \item تمام فیلدهای دیگر بر اساس مدل هستند (\texttt{fields = '\_all\_'}).
+        \item تمام فیلدهای دیگر بر اساس مدل هستند (\texttt{\lr{fields = '\_all\_'}}).
     \end{itemize}
 \end{itemize}
 
 \section{view}
 \subsection{UnifiedSignalTestView (APIView)}
-\texttt{POST /cellinfo/signal/}
+\texttt{\lr{POST /cellinfo/signal/}}
 \begin{itemize}
     \item عملکرد: ثبت یک رکورد سیگنال جدید
     \item احراز هویت: الزامی (\texttt{IsAuthenticated})
     \item ورودی: JSON شامل فیلدهای مدل مرتبط با تکنولوژی
 \end{itemize}
 
-جریان اتفاقات کد در \texttt{POST}
+  توضیحات کد   \texttt{POST}
 \begin{enumerate}
     \item دریافت داده‌ها از کاربر
     \item انتخاب Serializer مناسب بر اساس تکنولوژی
     \item اعتبارسنجی داده‌ها توسط Serializer
     \item ذخیره داده‌ها در دیتابیس و اختصاص \texttt{user} به کاربر جاری
-    \item برگرداندن Response موفق (201 Created) یا خطا (400 Bad Request)
+    \item برگرداندن Response موفق \lr{(201 Created)} یا خطا \lr{(400 Bad Request)}
 \end{enumerate}
 
-مثال \texttt{POST 4G}
+مثال ورودی   \texttt{\lr{POST \cellinfo\signal 4G}}
 \begin{lstlisting}[language=json]
 {
   "technology": "LTE",
@@ -390,7 +406,7 @@ def create_default_thresholds(sender, instance, created, **kwargs):
 }
 \end{lstlisting}
 
-Response Success 201
+\lr{Response Success 201}
 \begin{lstlisting}[language=json]
 {
   "id": 1,
@@ -408,26 +424,23 @@ Response Success 201
 }
 \end{lstlisting}
 
-Response Fail 400
-\begin{lstlisting}[language=json]
-{"error": "Invalid or missing technology field"}
-\end{lstlisting}
 
-\subsection{GET /cellinfo/signal/}
+
+\subsection{\lr{GET /cellinfo/signal/}}
 \begin{itemize}
     \item عملکرد: بازیابی داده‌ها با فیلترهای اختیاری
     \item احراز هویت: الزامی
     \item پارامترها: \texttt{technology}, \texttt{start}, \texttt{end}, \texttt{client\_id}, \texttt{page}, \texttt{page\_size}
 \end{itemize}
 
-جریان اتفاقات کد در \texttt{GET}
+   توضیحات کد  \texttt{GET}
 \begin{enumerate}
     \item خواندن پارامترهای فیلتر از URL
     \item انتخاب مدل و Serializer مناسب بر اساس تکنولوژی
     \item اعمال محدودیت دسترسی:
     \begin{itemize}
-        \item کاربران عادی → فقط داده‌های خودشان
-        \item ادمین → همه داده‌ها، با امکان فیلتر \texttt{client\_id}
+        \item کاربران عادی  فقط به داده های مربوط به خود دسترسی دارند  
+        \item ادمین به  همه داده‌ها، با امکان فیلتر دسترسی دارند  \texttt{client\_id}
     \end{itemize}
     \item اعمال فیلتر زمانی (\texttt{start} و \texttt{end})
     \item صفحه‌بندی داده‌ها (Pagination)
@@ -435,9 +448,8 @@ Response Fail 400
     \item مدیریت خطا در صورت عدم تعیین یا نادرست بودن \texttt{technology}
 \end{enumerate}
 
-مثال \texttt{GET} کاربر
+مثال \texttt{\lr{GET /cellinfo/signal/?technology=LTE&page=1&page_size=2}} کاربر
 \begin{lstlisting}[language=json]
-GET /cellinfo/signal/?technology=LTE&page=1&page_size=2
 {
   "count": 5,
   "num_pages": 3,
@@ -458,19 +470,14 @@ GET /cellinfo/signal/?technology=LTE&client_id=2&page=1
     \item با \texttt{client\_id} فقط داده کاربر مشخص شده را می‌گیرد
 \end{itemize}
 
-Response Fail 400
-\begin{lstlisting}[language=json]
-{"error": "Missing or invalid technology"}
-\end{lstlisting}
-
-\section{Tests API}
-Tests API برای ثبت و بازیابی تست‌های شبکه کاربران طراحی شده است. تست‌ها شامل:
+\section{/lr{Tests API}}
+\lr{Tests API} برای ثبت و بازیابی تست‌های شبکه کاربران طراحی شده است. تست‌ها شامل:
 \begin{itemize}
-    \item \textbf{PingTest:} زمان پاسخ Ping
-    \item \textbf{DNSTest:} زمان پاسخ DNS
-    \item \textbf{WebResponseTest:} زمان پاسخ وب
-    \item \textbf{HTTPUploadTest / HTTPDownloadTest:} سرعت آپلود و دانلود HTTP
-    \item \textbf{SMSTest:} زمان ارسال و دریافت پیامک
+    \item \textbf{\lr{PingTest}:} زمان پاسخ Ping
+    \item \textbf{\lr{DNSTest}:} زمان پاسخ DNS
+    \item \textbf{\lr{WebResponseTest}:} زمان پاسخ وب
+    \item \textbf{\lr{HTTPUploadTest / HTTPDownloadTest}:} سرعت آپلود و دانلود HTTP
+    \item \textbf{\lr{SMSTest}:} زمان ارسال و دریافت پیامک
 \end{itemize}
 
 \section{ویژگی‌ها}
@@ -479,66 +486,64 @@ Tests API برای ثبت و بازیابی تست‌های شبکه کاربر�
     \item \textbf{کاربران عادی:} فقط داده‌های خودشان را می‌بینند
     \item \textbf{ادمین:} می‌تواند داده همه کاربران را مشاهده کند و با \texttt{client\_id} فیلتر کند
     \item \textbf{فیلترها:} \texttt{start}, \texttt{end}, \texttt{client\_id}, \texttt{page}, \texttt{page\_size}
-    \item \textbf{Pagination:} نتایج صفحه‌بندی شده و شامل تعداد کل، تعداد صفحات، صفحه جاری و لیست نتایج
+    \item \textbf{\lr{Pagination}:} نتایج صفحه‌بندی شده و شامل تعداد کل، تعداد صفحات، صفحه جاری و لیست نتایج
 \end{itemize}
 
 \section{مدل‌ها}
 
 \subsection{PingTest}
 \begin{itemize}
-    \item \texttt{user:} کاربری که تست را ثبت کرده
-    \item \texttt{timestamp:} زمان انجام تست
-    \item \texttt{ping\_response\_time:} زمان پاسخ Ping به میلی‌ثانیه
+    \item \texttt{\lr{user}:} کاربری که تست را ثبت کرده
+    \item \texttt{\lr{timestamp}:} زمان انجام تست
+    \item \texttt{\lr{ping\_response\_time}:} زمان پاسخ Ping  
 \end{itemize}
 
 \subsection{DNSTest}
 \begin{itemize}
-    \item مشابه \texttt{PingTest}
-    \item \texttt{dns\_response\_time:} زمان پاسخ DNS به میلی‌ثانیه
+    \item \texttt{\lr{user}:} کاربری که تست را ثبت کرده
+    \item \texttt{\lr{timestamp}:} زمان انجام تست
+    \item \texttt{\lr{dns\_response\_time}:} زمان پاسخ DNS  
 \end{itemize}
 
 \subsection{WebResponseTest}
 \begin{itemize}
-    \item \texttt{user:} کاربر ثبت‌کننده
-    \item \texttt{timestamp:} زمان انجام تست
-    \item \texttt{web\_response\_time:} زمان پاسخ وب به میلی‌ثانیه
+    \item \texttt{\lr{user}:} کاربری که تست را ثبت کرده 
+    \item \texttt{\lr{timestamp}:} زمان انجام تست
+    \item \texttt{\lr{web\_response\_time}:} زمان پاسخ وب  
 \end{itemize}
 
 \subsection{HTTPUploadTest / HTTPDownloadTest}
 \begin{itemize}
-    \item \texttt{user:} کاربر ثبت‌کننده
-    \item \texttt{timestamp:} زمان انجام تست
-    \item \texttt{upload\_rate / download\_rate:} سرعت آپلود یا دانلود به Mbps
+    \item \texttt{\lr{user}:} کاربر ثبت‌کننده
+    \item \texttt{\lr{timestamp}:} زمان انجام تست
+    \item \texttt{\lr{upload\_rate / download\_rate}:} سرعت آپلود یا دانلود به Mbps
 \end{itemize}
 
 \subsection{SMSTest}
 \begin{itemize}
-    \item \texttt{user:} کاربر ثبت‌کننده
-    \item \texttt{timestamp\_sent:} زمان ارسال پیامک
-    \item \texttt{timestamp\_delivery:} زمان دریافت پیامک
-    \item \texttt{delivery\_duration:} مدت زمان تحویل پیامک به ثانیه
-    \item \texttt{message\_content:} متن پیامک
+    \item \texttt{\lr{user}:} کاربر ثبت‌کننده
+    \item \texttt{\lr{timestamp\_sent}:} زمان ارسال پیامک
+    \item \texttt{\lr{timestamp\_delivery}:} زمان دریافت پیامک
+    \item \texttt{\lr{delivery\_duration}:} مدت زمان تحویل پیامک  
+    \item \texttt{\lr{message\_content}:} متن پیامک
 \end{itemize}
 
-\section{Serializerها}
-تمام Serializerها:
+\section{Serializers}
+تمام  Serilizer :
+\begin{itemize}
+    \item \texttt{\lr{PingTestSerializer, DNSTestSerializer, WebResponseTestSerializer, HTTPUploadTestSerializer, HTTPDownloadTestSerializer, SMSTestSerializer}}
+\end{itemize}
+
 \begin{itemize}
     \item فیلد \texttt{user} فقط خواندنی است
     \item اعتبارسنجی داده‌های ورودی برای POST
 \end{itemize}
 
-نام Serializerها:
-\begin{itemize}
-    \item \texttt{PingTestSerializer, DNSTestSerializer, WebResponseTestSerializer, HTTPUploadTestSerializer, HTTPDownloadTestSerializer, SMSTestSerializer}
-\end{itemize}
 
 \section{view}
 
 تمام ویوهای GET از \texttt{FilteredListMixin} استفاده می‌کنند.
-\begin{itemize}
-    \item این Mixin مسئول فیلتر کردن QuerySet، صفحه‌بندی و سریالایز داده‌ها است.
-    \item مزیت: کد ویو تمیزتر و مشترک بین تمام تست‌ها می‌شود و مدیریت فیلترها یکجا انجام می‌شود.
-\end{itemize}
+این Mixin مسئول فیلتر کردن QuerySet، صفحه‌بندی و سریالایز داده‌ها است.
 
 \subsection{POST}
 \begin{itemize}
@@ -548,7 +553,7 @@ Tests API برای ثبت و بازیابی تست‌های شبکه کاربر�
         \item دریافت JSON ورودی
         \item سریالایز داده‌ها و اعتبارسنجی
         \item ذخیره داده‌ها و اختصاص \texttt{user} به کاربر جاری
-        \item Response موفق (201 Created) یا خطا (400 Bad Request)
+        \item Response موفق \lr{(201 Created)} یا خطا \lr{(400 Bad Request)}
     \end{enumerate}
 \end{itemize}
 
@@ -563,7 +568,7 @@ Tests API برای ثبت و بازیابی تست‌های شبکه کاربر�
             \item کاربران عادی → فقط داده‌های خود
             \item ادمین → همه داده‌ها، امکان فیلتر \texttt{client\_id}
         \end{itemize}
-        \item فیلتر زمانی (\texttt{timestamp} یا \texttt{timestamp\_sent} برای SMS)
+        \item فیلتر زمانی \texttt{timestamp} یا \texttt{timestamp\_sent} برای SMS
         \item صفحه‌بندی داده‌ها
         \item سریالایز و بازگشت Response
     \end{enumerate}
@@ -572,7 +577,7 @@ Tests API برای ثبت و بازیابی تست‌های شبکه کاربر�
 \section{نمونه‌ها (ورودی و خروجی)}
 
 \subsection{PingTest}
-\textbf{POST}
+\textbf{POST /tests/ping }
 \begin{lstlisting}[language=json]
 {
   "timestamp": "2025-08-21T12:00:00Z",
@@ -580,7 +585,7 @@ Tests API برای ثبت و بازیابی تست‌های شبکه کاربر�
 }
 \end{lstlisting}
 
-Response Success 201
+\lr{Response Success 201}
 \begin{lstlisting}[language=json]
 {
   "id": 1,
@@ -590,9 +595,9 @@ Response Success 201
 }
 \end{lstlisting}
 
-\textbf{GET}
+\textbf{GET /tests/ping/?start=2025-08-21T00:00:00Z&end=2025-08-21T23:59:59Z&page=1&page_size=10
+}
 \begin{lstlisting}[language=json]
-GET /tests/ping/?start=2025-08-21T00:00:00Z&end=2025-08-21T23:59:59Z&page=1&page_size=10
 {
   "count": 25,
   "num_pages": 3,
@@ -604,7 +609,7 @@ GET /tests/ping/?start=2025-08-21T00:00:00Z&end=2025-08-21T23:59:59Z&page=1&page
 \end{lstlisting}
 
 \subsection{DNSTest}
-\textbf{POST}
+\textbf{POST /tests/dns/}
 \begin{lstlisting}[language=json]
 {
   "timestamp": "2025-08-21T12:00:00Z",
@@ -612,7 +617,7 @@ GET /tests/ping/?start=2025-08-21T00:00:00Z&end=2025-08-21T23:59:59Z&page=1&page
 }
 \end{lstlisting}
 
-Response Success 201
+\lr{Response Success 201}
 \begin{lstlisting}[language=json]
 {
   "id": 1,
@@ -622,10 +627,9 @@ Response Success 201
 }
 \end{lstlisting}
 
-\textbf{GET}
+\textbf{GET /tests/dns/?start=2025-08-21T00:00:00Z&end=2025-08-21T23:59:59Z}
 \begin{lstlisting}[language=json]
-GET /tests/dns/?start=2025-08-21T00:00:00Z&end=2025-08-21T23:59:59Z
-Response Success 200
+
 {
   "count": 10,
   "num_pages": 1,
@@ -637,7 +641,7 @@ Response Success 200
 \end{lstlisting}
 
 \subsection{WebResponseTest}
-\textbf{POST}
+\textbf{POST /tests/web/}
 \begin{lstlisting}[language=json]
 {
   "timestamp": "2025-08-21T12:00:00Z",
@@ -645,7 +649,7 @@ Response Success 200
 }
 \end{lstlisting}
 
-Response Success 201
+\lr{Response Success 201}
 \begin{lstlisting}[language=json]
 {
   "id": 1,
@@ -655,9 +659,9 @@ Response Success 201
 }
 \end{lstlisting}
 
-\textbf{GET}
+\textbf{GET /tests/web/?start=2025-08-21T00:00:00Z&end=2025-08-21T23:59:59Z
+}
 \begin{lstlisting}[language=json]
-GET /tests/web/?start=2025-08-21T00:00:00Z&end=2025-08-21T23:59:59Z
 Response Success 200
 {
   "count": 8,
@@ -669,55 +673,55 @@ Response Success 200
 }
 \end{lstlisting}
 \section{Threshold API}
-برای مدیریت پارامترها و سطح‌های آستانه (Threshold) شبکه طراحی شده است. این آستانه‌ها به کاربر و ادمین اجازه می‌دهند تا کیفیت و کمیت سیگنال شبکه (2G/3G/4G/5G) را بررسی کنند و سطوح رنگ‌بندی شده برای هشدار یا نمایش وضعیت تنظیم کنند.
+برای مدیریت پارامترها و سطح‌های آستانه (Threshold) شبکه طراحی شده است. این آستانه‌ها به کاربر و ادمین اجازه می‌دهند تا کیفیت و کمیت سیگنال شبکه \lr{(2G/3G/4G/5G)} را بررسی کنند و سطوح رنگ‌بندی شده برای هشدار یا نمایش وضعیت تنظیم کنند.
 
 \section{ویژگی‌ها}
 \begin{itemize}
     \item \textbf{احراز هویت:} تمام ویوها \texttt{IsAuthenticated} هستند
     \item \textbf{کاربران عادی:} فقط پارامترهای خودشان را مشاهده و ویرایش می‌کنند
     \item \textbf{ادمین:} می‌تواند داده همه کاربران را مشاهده کند و با \texttt{client\_id} فیلتر کند
-    \item \textbf{POST:} ایجاد یا آپدیت پارامترهای Threshold همراه با سطوح آن
-    \item \textbf{GET:} لیست پارامترها و سطوح آنها با امکان فیلتر
+    \item \textbf{\lr{POST}:} ایجاد یا آپدیت پارامترهای Threshold همراه با سطوح آن
+    \item \textbf{\lr{GET}:} لیست پارامترها و سطوح آنها با امکان فیلتر
 \end{itemize}
 
 \section{مدل ها}
 
 \subsection{ThresholdParameter}
 \begin{itemize}
-    \item \texttt{user:} کاربری که این پارامتر را تنظیم کرده
-    \item \texttt{name:} نام پارامتر (مثلاً "Signal Strength")
-    \item \texttt{technology:} نوع شبکه (2G/3G/4G/5G)
-    \item \texttt{signal\_type:} نوع سیگنال (quantity یا quality)
-    \item \texttt{Relationship:} هر پارامتر می‌تواند چند ThresholdLevel داشته باشد
+    \item \texttt{\lr{user}:} کاربری که این پارامتر را تنظیم کرده
+    \item \texttt{\lr{name}:} نام پارامتر 
+    \item \texttt{\lr{technology}:} نوع شبکه \lr{(2G/3G/4G/5G)}
+    \item \texttt{\lr{signal\_type}:} نوع سیگنال \lr{(quantity یا quality)}
+    \item \texttt{\lr{Relationship}:} هر پارامتر می‌تواند چند ThresholdLevel داشته باشد
 \end{itemize}
 
 \subsection{ThresholdLevel}
 \begin{itemize}
-    \item \texttt{parameter:} پارامتر مربوطه
-    \item \texttt{level:} شماره سطح (مثلاً 1، 2، 3)
-    \item \texttt{color:} رنگ مربوط به سطح (مثلاً "green")
-    \item \texttt{min\_value:} حداقل مقدار این سطح
-    \item \texttt{max\_value:} حداکثر مقدار این سطح
+    \item \texttt{\lr{parameter}:} پارامتر مربوطه
+    \item \texttt{\lr{level}:} شماره سطح (مثلاً 1، 2، 3)
+    \item \texttt{\lr{color}:} رنگ مربوط به سطح (مثلاً "green")
+    \item \texttt{\lr{min\_value}:} حداقل مقدار این سطح
+    \item \texttt{\lr{max\_value}:} حداکثر مقدار این سطح
 \end{itemize}
 
-\section{Serializerها}
+\section{Serializers}
 
-\subsection{Input Serializerها}
+\subsection{\lr{Input Serializers}}
 \begin{itemize}
-    \item \texttt{ThresholdLevelInputSerializer:} برای هر سطح
-    \item \texttt{ThresholdParamInputSerializer:} شامل نام، نوع سیگنال و لیست سطوح
-    \item \texttt{UnifiedThresholdInputSerializer:} شامل تکنولوژی و پارامترهای Threshold
+    \item \texttt{\lr{ThresholdLevelInputSerializer}:} برای هر سطح
+    \item \texttt{\lr{ThresholdParamInputSerializer}:} شامل نام، نوع سیگنال و لیست سطوح
+    \item \texttt{\lr{UnifiedThresholdInputSerializer}:} شامل تکنولوژی و پارامترهای Threshold
 \end{itemize}
 
-\subsection{Output Serializerها}
+\subsection{\lr{Output Serializers}}
 \begin{itemize}
     \item \texttt{ThresholdLevelSerializer:} برای نمایش سطح
     \item \texttt{ThresholdParameterSerializer:} نمایش پارامتر و لیست سطوح مرتبط
 \end{itemize}
 
-\section{view}
+\section{Views}
 
-\subsection{ThresholdCreateView (POST)}
+\subsection{\lr{ThresholdCreateView (POST)}}
 \begin{itemize}
     \item ثبت یا آپدیت پارامترهای Threshold
     \item جریان کد:
@@ -727,11 +731,11 @@ Response Success 200
         \item بررسی حداقل 3 سطح برای هر پارامتر
         \item اگر پارامتر قبلاً وجود داشته باشد → حذف سطوح قدیمی
         \item ایجاد یا آپدیت سطح‌ها (\texttt{ThresholdLevel})
-        \item Response موفق (201 Created) یا خطا (400 Bad Request)
+        \item Response موفق \lr{(201 Created)} یا خطا \lr{(400 Bad Request)}
     \end{enumerate}
 \end{itemize}
 
-\textbf{POST ورودی نمونه}
+\textbf{POST /thresholds/create/ }
 \begin{lstlisting}[language=json]
 {
   "technology": "4G",
@@ -749,14 +753,14 @@ Response Success 200
 }
 \end{lstlisting}
 
-Response Success 201
+\lr{Response Success 201}
 \begin{lstlisting}[language=json]
 {
   "message": "Thresholds created/updated successfully."
 }
 \end{lstlisting}
 
-Response Fail 400 (سطح کمتر از 3)
+\lr{Response Fail 400 }(سطح کمتر از 3)
 \begin{lstlisting}[language=json]
 {
   "error": "Parameter 'Signal Strength' must have at least 3 levels."
@@ -769,20 +773,16 @@ Response Fail 400 (سطح کمتر از 3)
     \item فیلترها: \texttt{technology}, \texttt{name}, \texttt{client\_id}
     \item کاربران عادی: فقط پارامترهای خودشان
     \item ادمین: می‌تواند همه پارامترها را ببیند و با \texttt{client\_id} فیلتر کند
-    \item Pagination در این ویو پیش‌فرض استفاده نشده، ولی می‌توان اضافه کرد
 \end{itemize}
 
-\textbf{GET نمونه}
-\begin{lstlisting}[language=json]
-GET /thresholds/?technology=4G&name=Signal%20Strength
-\end{lstlisting}
+\textbf{GET /thresholds/?technology=4G&name=rsrp}
 
-Response Success 200
+/lr{Response Success 200}
 \begin{lstlisting}[language=json]
 [
   {
     "user_id": 2,
-    "name": "Signal Strength",
+    "name": "rsrp",
     "technology": "4G",
     "signal_type": "quantity",
     "levels": [
@@ -794,63 +794,6 @@ Response Success 200
 ]
 \end{lstlisting}
 
-\section{نمونه‌ها (ورودی و خروجی)}
-
-\subsection{ThresholdCreateView (POST)}
-\textbf{POST}
-\begin{lstlisting}[language=json]
-{
-  "technology": "4G",
-  "parameters": [
-    {
-      "name": "Signal Strength",
-      "signal_type": "quantity",
-      "levels": [
-        {"level": 1, "color": "red", "min": 0, "max": 30},
-        {"level": 2, "color": "yellow", "min": 30, "max": 70},
-        {"level": 3, "color": "green", "min": 70, "max": 100}
-      ]
-    }
-  ]
-}
-\end{lstlisting}
-
-Response Success 201
-\begin{lstlisting}[language=json]
-{
-  "message": "Thresholds created/updated successfully."
-}
-\end{lstlisting}
-
-Response Fail 400
-\begin{lstlisting}[language=json]
-{
-  "error": "Parameter 'Signal Strength' must have at least 3 levels."
-}
-\end{lstlisting}
-
-\subsection{ThresholdListView (GET)}
-\textbf{GET}
-\begin{lstlisting}[language=json]
-GET /thresholds/?technology=4G&name=Signal%20Strength
-\end{lstlisting}
-
-Response Success 200
-\begin{lstlisting}[language=json]
-[
-  {
-    "user_id": 2,
-    "name": "Signal Strength",
-    "technology": "4G",
-    "signal_type": "quantity",
-    "levels": [
-      {"level": 1, "color": "red", "min_value": 0, "max_value": 30},
-      {"level": 2, "color": "yellow", "min_value": 30, "max_value": 70},
-      {"level": 3, "color": "green", "min_value": 70, "max_value": 100}
-    ]
-  }
-]
-\end{lstlisting}
 
 
 \chapter{ \lr{Polaris Client}}
