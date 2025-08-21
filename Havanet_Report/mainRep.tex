@@ -100,6 +100,109 @@
   "phone": ["This field must be unique."]
 }
 \end{lstlisting}
+\subsubsection{سیگنال پس از ثبت‌نام کاربر}
+پس از ایجاد کاربر جدید (تنها در صورتی که نقش کاربر \lr{user} باشد)، یک سیگنال \lr{post\_save} از طرف جنگو فراخوانی می‌شود. این سیگنال وظیفه دارد به صورت خودکار مقادیر پیش‌فرض \lr{ThresholdParameter} و \lr{ThresholdLevel} را برای کاربر ایجاد کند. 
+
+این مقادیر شامل پارامترهای مختلف کیفی و کمی برای تکنولوژی‌های \lr{2G}, \lr{3G}, \lr{4G} و \lr{5G} هستند. برای هر پارامتر، چند سطح (Level) با بازه‌های عددی و رنگ مشخص تعریف می‌شود.  
+
+کلیت مفهوم \lr{Threshold} در بخش‌های بعدی توضیح داده خواهد شد، اما در اینجا تنها نحوه ایجاد خودکار آن پس از ثبت‌نام کاربر شرح داده می‌شود. 
+
+\textbf{کد سیگنال (create\_default\_thresholds)}:
+\begin{lstlisting}[language=python]
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from authentication.models import User
+from threshold.models import ThresholdParameter, ThresholdLevel
+from threshold.defaults import default_thresholds 
+
+@receiver(post_save, sender=User)
+def create_default_thresholds(sender, instance, created, **kwargs):
+    if created and instance.role == "user": 
+        for tech, params in default_thresholds.items():
+            for p in params:
+                param = ThresholdParameter.objects.create(
+                    user=instance,
+                    name=p["name"],
+                    technology=tech,
+                    signal_type=p["signal_type"],
+                )
+                for lvl in p["levels"]:
+                    ThresholdLevel.objects.create(
+                        parameter=param,
+                        level=lvl["level"],
+                        color=lvl["color"],
+                        min_value=lvl["min"],
+                        max_value=lvl["max"],
+                    )
+\end{lstlisting}
+
+\textbf{نمونه‌ای از مقادیر پیش‌فرض (\lr{default\_thresholds})}:
+\begin{lstlisting}[language=python]
+default_thresholds = {
+    "2G": [
+        {
+            "name": "rxlev",
+            "signal_type": "quantity",
+            "levels": [
+                {"level": 1, "color": "#FF0000", "min": -110, "max": -100},
+                {"level": 2, "color": "#FFFF00", "min": -100, "max": -80},
+                {"level": 3, "color": "#008000", "min": -80, "max": -50},
+            ],
+        }
+    ],
+    "3G": [
+        {
+            "name": "rscp",
+            "signal_type": "quantity",
+            "levels": [
+                {"level": 1, "color": "#FF0000", "min": -120, "max": -110},
+                {"level": 2, "color": "#FFFF00", "min": -110, "max": -90},
+                {"level": 3, "color": "#008000", "min": -90, "max": -60},
+            ],
+        }
+    ],
+    "4G": [
+        {
+            "name": "rsrp",
+            "signal_type": "quantity",
+            "levels": [
+                {"level": 1, "color": "#FF0000", "min": -140, "max": -120},
+                {"level": 2, "color": "#FFA500", "min": -120, "max": -110},
+                {"level": 3, "color": "#008000", "min": -110, "max": -80},
+            ],
+        },
+        {
+            "name": "rsrq",
+            "signal_type": "quality",
+            "levels": [
+                {"level": 1, "color": "#FF0000", "min": -20, "max": -15},
+                {"level": 2, "color": "#FFFF00", "min": -15, "max": -10},
+                {"level": 3, "color": "#008000", "min": -10, "max": -3},
+            ],
+        },
+    ],
+    "5G": [
+        {
+            "name": "rsrp",
+            "signal_type": "quantity",
+            "levels": [
+                {"level": 1, "color": "#FF0000", "min": -140, "max": -120},
+                {"level": 2, "color": "#FFA500", "min": -120, "max": -110},
+                {"level": 3, "color": "#008000", "min": -110, "max": -80},
+            ],
+        },
+        {
+            "name": "rsrq",
+            "signal_type": "quality",
+            "levels": [
+                {"level": 1, "color": "#FF0000", "min": -20, "max": -15},
+                {"level": 2, "color": "#FFFF00", "min": -15, "max": -10},
+                {"level": 3, "color": "#008000", "min": -10, "max": -3},
+            ],
+        },
+    ],
+}
+\end{lstlisting}
 
 
 \subsection{Login API (ورود کاربر)}
