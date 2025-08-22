@@ -29,8 +29,11 @@
 
 
 
+\chapter{ \lr{Server-side Component}}
 
+\chapter{ \lr{Polaris Client}}
 
+\section{ \lr{Web Application}}
 
 \chapter{ \lr{Polaris Server}}
 
@@ -750,16 +753,464 @@ Response Success 200
   }
 ]
 \end{lstlisting}
-
-
-
-\chapter{ \lr{Polaris Client}}
-
-\section{ \lr{Web Application}}
-
 \section{ \lr{Android Mobile Client}}
 
-\chapter{تحلیل و نتجه گیری}
+\subsection{  utils}
+پوشه \texttt{utils} یکی از پایه‌های اصلی معماری تمیز و ماژولار در این پروژه است. این فولدر شامل مجموعه‌ای از کلاس‌ها و ابزارهای کمکی است که وظایف عمومی و پرکاربرد را از منطق اصلی اپلیکیشن جدا می‌کنند. با متمرکز کردن این وظایف در یک مکان مشخص، از تکرار کد جلوگیری می‌شود و خوانایی، قابلیت نگهداری و توسعه‌ی پروژه بهبود می‌یابد. \\
+
+\begin{itemize}
+	\item \textbf{مدیریت مجوزهای دسترسی}\\
+	این کلاس وظیفه مدیریت و بررسی مجوزهای ضروری اپلیکیشن را بر عهده دارد. با استفاده از این کلاس، قبل از انجام هر عملیاتی که نیاز به مجوز دارد (مانند دسترسی به مکان یا ارسال پیامک)، می‌توان از وجود مجوز اطمینان حاصل کرد.
+	
+	\begin{lstlisting}[caption=PermissionsUtils.kt]
+
+object PermissionsUtils {
+	val REQUIRED_PERMISSIONS = arrayOf(
+	Manifest.permission.ACCESS_COARSE_LOCATION,
+	Manifest.permission.SEND_SMS,
+	Manifest.permission.RECEIVE_SMS,
+	Manifest.permission.ACCESS_FINE_LOCATION,
+	Manifest.permission.READ_PHONE_STATE
+	)
+	
+	
+	fun hasAllPermissions(context: Context): Boolean {
+		return REQUIRED_PERMISSIONS.all {
+			ActivityCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
+		}
+	}
+}
+	\end{lstlisting}
+	
+	\item \textbf{ابزار مکان‌یابی}\\
+	این کلاس یک واسط ساده برای دریافت آخرین موقعیت مکانی کاربر فراهم می‌کند. ابتدا وجود مجوزهای لازم از \texttt{PermissionsUtils} بررسی می‌شود و سپس با استفاده از سرویس‌های Google Play، مکان کاربر به صورت ناهمگام دریافت شده و نتیجه از طریق یک callback برگردانده می‌شود.
+	
+	\begin{lstlisting}[caption=LocationUtils.kt]
+object LocationUtils {
+	@SuppressLint("MissingPermission")
+	fun getCurrentLocation(context: Context, onLocationReceived: (Location?) -> Unit) {
+		if (!PermissionsUtils.hasAllPermissions(context)) {
+			onLocationReceived(null)
+			return
+		}
+		val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+		fusedLocationClient.lastLocation
+		.addOnSuccessListener { location: Location? ->
+			onLocationReceived(location)
+		}
+		.addOnFailureListener {
+			onLocationReceived(null)
+		}
+	}
+}
+	\end{lstlisting}
+	
+	\item \textbf{ابزار اطلاعات شبکه}\\
+	کلاس \texttt{NetworkUtils} یک ابزار تخصصی برای جمع‌آوری اطلاعات فنی شبکه تلفن همراه است. این کلاس از قابلیت‌های سیستم اندروید برای شناسایی و تحلیل شبکه‌های سلولی اطراف استفاده می‌کند.
+	
+	\begin{itemize}
+\item \textbf{متد \lr{getNetworkTypeName}}\\
+		این متد نوع شبکه فعلی دستگاه را به یک رشته قابل فهم تبدیل می‌کند. با استفاده از عبارت \texttt{when}، مقادیر عددی \texttt{TelephonyManager.networkType} به نام‌های متناظر شبکه (مثل ``LTE``, ``5G``, ``HSPA+`` و غیره) ترجمه می‌شوند.
+		
+		\begin{lstlisting}[caption=متد getNetworkTypeName]
+fun getNetworkTypeName(manager: TelephonyManager): String {
+	return when (manager.networkType) {
+		TelephonyManager.NETWORK_TYPE_LTE -> "LTE"
+		TelephonyManager.NETWORK_TYPE_NR -> "5G"
+		TelephonyManager.NETWORK_TYPE_HSPAP -> "HSPA+"
+		TelephonyManager.NETWORK_TYPE_HSPA -> "HSPA"
+		TelephonyManager.NETWORK_TYPE_UMTS -> "UMTS"
+		TelephonyManager.NETWORK_TYPE_EDGE -> "EDGE"
+		TelephonyManager.NETWORK_TYPE_GPRS -> "GPRS"
+		TelephonyManager.NETWORK_TYPE_GSM -> "GSM"
+		else -> "نامشخص"
+	}
+}
+		\end{lstlisting}
+		
+\item \textbf{متد \lr{getCellInfoText}}\\
+		این متد وظیفه جمع‌آوری اطلاعات کامل از سلول‌های شبکه اطراف را بر عهده دارد:
+		
+		\begin{itemize}
+			\item دریافت اطلاعات با \lr{telephonyManager.allCellInfo}.
+			\item پردازش داده‌ها برای هر نوع سلول :GSM, WCDMA, LTE, NR.
+			\item استخراج جزئیات فنی مانند \lr{Cell ID}, \lr{PLMN ID}, قدرت و کیفیت سیگنال، \lr{TAC} و \lr{ARFCN}.
+			\item سازماندهی داده‌ها در یک شیء \lr{JSONObject} برای ذخیره یا ارسال به سرور.
+			\item بازگشت خروجی به صورت یک \lr{Pair} شامل پیام متنی و شیء \lr{JSONObject}.
+		\end{itemize}
+			
+\item \textbf{متدهای تبدیل فرکانس (استفاده داخلی)}\\
+		این متدها برای تبدیل مقادیر ARFCN/UARFCN/EARFCN/NRARFCN به فرکانس واقعی در مگاهرتز طراحی شده‌اند و اطلاعات دقیق‌تری درباره باند فرکانسی ارائه می‌دهند.
+	
+	\end{itemize}
+\begin{note}
+	\textbf{پارامتر های دست نیافته}\\
+عدم توانایی در دسترسی به مقادیر \lr{"RAC"} و \lr{"Ec/N0}در برنامه‌های اندرویدی عمدتاً ناشی از محدودیت‌های نرم‌افزاری و سخت‌افزاری سیستم‌عامل است. این پارامترها، به‌ویژه Ec/N0 که مربوط به کیفیت سیگنال شبکه‌های WCDMA است و RAC که برای شناسایی منطقه مسیریابی در شبکه کاربرد دارد، توسط بسیاری از گوشی‌ها به صورت مستقیم در اختیار APIهای عمومی اندروید قرار نمی‌گیرند.به همین دلیل، در محیط توسعه استاندارد و با استفاده از ابزارهای معمولی مانند Android Studio، امکان استخراج مستقیم این مقادیر محدود و در بسیاری موارد غیرممکن است.
+
+\end{note}
+	\item \textbf{تست‌کننده تحویل پیامک}\\
+	این کلاس یک ابزار دقیق برای تست عملکرد ارسال و دریافت پیامک است. با استفاده از BroadcastReceiver، زمان تحویل پیامک اندازه‌گیری شده و تأخیر آن محاسبه می‌شود.
+	
+	\begin{lstlisting}[caption=SmsDeliveryTester.kt]
+class SmsDeliveryTester(
+private val context: Context,
+private val onResult: (Long) -> Unit
+) {
+	private val deliveryAction = "com.example.Havanet.SMS_DELIVERED"
+	private val deliveryReceiver = object : BroadcastReceiver() {
+		override fun onReceive(ctx: Context?, intent: Intent?) {
+			val sentTime = intent?.getLongExtra("sentTime", -1L) ?: return
+			val deliveryTime = System.currentTimeMillis()
+			val delay = deliveryTime - sentTime
+			Log.d("SmsDeliveryTester", "SMS delivery delay: $delay ms")
+			context.unregisterReceiver(this)
+			onResult(delay)
+		}
+	}
+	
+	fun sendSms() {
+		val sentTime = System.currentTimeMillis()
+		
+		val intent = Intent(deliveryAction).apply {
+			putExtra("sentTime", sentTime)}
+		val pendingIntent = PendingIntent.getBroadcast(
+		context,
+		0,
+		intent,
+		PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+		)
+		context.registerReceiver(deliveryReceiver, IntentFilter(deliveryAction))
+		val smsManager = SmsManager.getDefault()
+		smsManager.sendTextMessage(phoneNumber, null, message, null, pendingIntent)
+	}
+}
+
+	\end{lstlisting}
+	
+\end{itemize}
+\subsection{ viewModel :  SharedViewModel}
+کلاس \texttt{SharedViewModel} در پروژه نقشی کلیدی در مدیریت و به اشتراک‌گذاری داده‌ها بین کامپوننت‌های مختلف برنامه ایفا می‌کند. این کلاس با استفاده از \texttt{ViewModel} از کتابخانه \texttt{Android Jetpack}، داده‌ها را از چرخه حیات \texttt{Activity/Fragment} جدا می‌سازد، به طوری که داده‌ها در زمان تغییر پیکربندی (مانند چرخش صفحه) از بین نمی‌روند.
+
+\paragraph{پیاده‌سازی و عملکرد}
+
+\begin{itemize}
+	\item \textbf{مدیریت URL پایه:} این کلاس از \texttt{MutableLiveData} برای ذخیره URL پایه سرور (\_baseURL) استفاده می‌کند. این امر به کامپوننت‌های رابط کاربری امکان می‌دهد تا به صورت زنده تغییرات URL را مشاهده کرده و به آن واکنش نشان دهند. متد \texttt{initBaseURL} آدرس IP را به صورت محلی تعریف کرده و آن را در \texttt{SharedPreferences} ذخیره نموده و سپس در \_baseURL قرار می‌دهد.
+	
+	\item \textbf{ذخیره‌سازی و بازیابی داده‌ها:} هسته اصلی این \texttt{ViewModel} در متدهای \texttt{saveData}، \texttt{loadData} و \texttt{clearData}قرار دارد که برای مدیریت داده‌های کلید-مقدار  (\lr{Key-Value}) به کار می‌روند. این متدها از \texttt{SharedPreferences} به‌عنوان یک ابزار سبک‌وزن برای ذخیره‌سازی داده‌های ساده استفاده می‌کنند.
+	\begin{itemize}
+\item \textbf{متد \texttt{saveData}:} این متد می‌تواند انواع مختلف داده‌ها (\texttt{String}, \texttt{Boolean}, \texttt{Int}, \texttt{Float}, \texttt{Long}) را بر اساس نوع آن‌ها در \texttt{SharedPreferences} ذخیره نماید. این طراحی یک راه‌حل عمومی و انعطاف‌پذیر برای ذخیره‌سازی داده‌ها فراهم می‌کند.
+
+\item \textbf{متد \texttt{loadData}:} این متد داده‌ها را با یک کلید مشخص و یک مقدار پیش‌فرض از \texttt{SharedPreferences} بازیابی می‌کند. با استفاده از \texttt{Generics (<T>)} و یک عبارت \texttt{when}، این متد قادر است داده‌ها را به نوع صحیح خود تبدیل کرده و برگرداند.
+
+
+\item \textbf{متد \texttt{clearData}:} امکان حذف یک مقدار خاص از \texttt{SharedPreferences} را با استفاده از کلید آن فراهم می‌کند. 
+این قابلیت برای مدیریت داده‌های حساس (مانند توکن‌های احراز هویت) که باید پس از خروج کاربر یا در شرایط خاص حذف شوند، بسیار حیاتی است. 
+این متد با فراخوانی \texttt{editor.remove(key)} داده مرتبط را حذف می‌کند.
+
+	\end{itemize} 	
+	\item \textbf{رویکرد معماری:} استفاده از \texttt{ViewModel} به عنوان یک مخزن مرکزی برای داده‌های اشتراکی، از وابستگی مستقیم سایر بخش‌های برنامه به \texttt{SharedPreferences} جلوگیری می‌کند. این کار باعث می‌شود که کد تمیزتر، قابل نگهداری‌تر و تست‌پذیرتر باشد، زیرا منطق ذخیره‌سازی و بازیابی داده‌ها در یک مکان واحد متمرکز شده است.
+\end{itemize}
+
+\subsection{ service :  MyForegroundService}
+
+\textbf{MyForegroundService} به عنوان یک سرویس پس‌زمینه در پروژه، نقش حیاتی در جمع‌آوری و ارسال مداوم اطلاعات فنی به سرور بک‌اند را ایفا می‌کند. این سرویس به صورت \textit{Foreground} طراحی شده تا با نمایش یک نوتیفیکیشن دائمی به کاربر، از بسته شدن ناگهانی آن توسط سیستم‌عامل اندروید جلوگیری شود. این ویژگی برای عملیات‌های طولانی‌مدت و بدون وقفه ضروری است.
+
+\paragraph{پیاده‌سازی و عملکرد}
+
+\begin{itemize}
+\item\textbf{زمان‌بندی هوشمند:} در زمان راه‌اندازی، سرویس یک \textit{Handler} را فعال می‌کند که هر ۱۰ ثانیه یک بار متد \texttt{collectAndSendData()} را فراخوانی می‌کند. این رویکرد، پایداری و عملکرد بهینه سرویس را تضمین می‌کند.
+
+\item\textbf{جمع‌آوری داده:} متد \texttt{collectAndSendData()} وظیفه جمع‌آوری اطلاعات را بر عهده دارد. در این مرحله، سرویس از کلاس‌های \texttt{NetworkUtils} و \texttt{LocationUtils} برای دریافت جزئیات دقیق شبکه (مانند نوع و اطلاعات سلول‌ها) و موقعیت جغرافیایی دستگاه استفاده می‌کند. این طراحی، نشان‌دهنده یک معماری ماژولار و تمیز است که وظایف را به ابزارهای تخصصی خود در پکیج \texttt{utils} واگذار می‌کند.
+
+\item\textbf{ارسال به سرور:} پس از جمع‌آوری داده‌ها و ترکیب آن‌ها در یک \texttt{JSONObject}، اطلاعات به متد \texttt{sendToBackend()} ارسال می‌شود. این ارسال به صورت \textit{Asynchronous} و با استفاده از کتابخانه \texttt{OkHttp} انجام می‌شود تا رابط کاربری اصلی (UI) مسدود نشود.
+
+\item\textbf{مدیریت پیکربندی:} آدرس سرور و توکن احراز هویت به صورت پویا از یک \texttt{SharedViewModel} بارگذاری می‌شوند که نشان‌دهنده جداسازی داده‌های پیکربندی از منطق اصلی سرویس است.
+
+\item\textbf{پایش و اشکال‌زدایی:} در صورت موفقیت یا شکست در ارسال داده، پیام‌های مربوطه در \texttt{Logcat} ثبت می‌شوند که برای رصد و اشکال‌زدایی عملکرد سرویس بسیار مفید است.
+\end{itemize}
+
+\subsection{تحلیل اکتیویتی‌ها}
+
+\subsubsection{MainActivity}
+\texttt{MainActivity} به عنوان دروازه ورود به بخش اصلی اپلیکیشن عمل می‌کند و وظایف مهمی مانند مدیریت جریان ورود کاربر، 
+درخواست مجوزهای ضروری و راه‌اندازی سرویس‌های پس‌زمینه را بر عهده دارد.
+
+\begin{itemize}
+	\item \textbf{مدیریت جریان کاربر:} این اکتیویتی اولین نقطه‌ای است که پس از اجرای برنامه بررسی می‌کند که آیا کاربر با موفقیت ثبت‌نام کرده است یا خیر. این کار با بررسی مقدار \texttt{isRegistered} در \texttt{SharedViewModel} انجام می‌شود. اگر کاربر قبلاً احراز هویت نشده باشد، به صورت خودکار به \texttt{RegisterActivity} هدایت می‌شود تا فرآیند ورود یا ثبت‌نام را تکمیل کند.
+	
+	\item \textbf{درخواست مجوزها:} در صورت احراز هویت موفق، \texttt{MainActivity} مسئولیت درخواست مجوزهای لازم (مانند دسترسی به مکان و شبکه) را به عهده می‌گیرد. این کار از طریق متد \texttt{onRequestPermissionsResult()} مدیریت می‌شود که پس از دریافت پاسخ کاربر، تصمیم می‌گیرد که برنامه به کار خود ادامه دهد یا بسته شود.
+	
+	\item \textbf{راه‌اندازی رابط کاربری و سرویس‌ها:} پس از تأیید مجوزها، متد \texttt{initUI()} رابط کاربری اصلی شامل نوار ابزار و منوی ناوبری پایینی را راه‌اندازی می‌کند. مهم‌تر از آن، در همین مرحله سرویس \texttt{MyForegroundService} برای شروع جمع‌آوری داده‌ها به صورت پس‌زمینه فعال می‌شود. این رویکرد جداسازی کامل رابط کاربری از منطق کسب‌وکار را نشان می‌دهد.
+\end{itemize}
+\begin{note}{مسیر\lr{ Layout Resource File}:}
+	\begin{latin}
+		« app\textbackslash src\textbackslash main\textbackslash res\textbackslash layout\textbackslash activity\_main.xml »
+	\end{latin}
+\end{note}
+\subsubsection{RegisterActivity}
+\texttt{RegisterActivity} یک واسط کاربری متمرکز برای فرآیندهای حساس ثبت‌نام و ورود به سیستم است و تمام ارتباطات لازم با سرور احراز هویت را مدیریت می‌کند.
+
+\begin{itemize}
+	\item \textbf{واسط کاربری پویا:} این اکتیویتی دارای یک حالت دو‌قطبی است که به کاربر اجازه می‌دهد بین «ورود» و «ثبت‌نام» جابه‌جا شود. این تغییر حالت، عنوان صفحه و متن دکمه‌ها را به صورت پویا تغییر می‌دهد تا تجربه کاربری بهتری فراهم شود.
+	
+	\item \textbf{ارتباط امن با سرور:} متد \texttt{sendToBackend()} از کتابخانه OkHttp برای ارسال اطلاعات احراز هویت به صورت امن استفاده می‌کند. این متد بر اساس وضعیت فعلی (ورود یا ثبت‌نام)، درخواست را به یکی از دو نقطه پایانی \texttt{/auth/login/} یا \texttt{/auth/signup/} ارسال می‌کند.
+	
+	\item \textbf{مدیریت پاسخ سرور:} پس از دریافت پاسخ موفق، توکن‌های \texttt{access} و \texttt{refresh} از پاسخ JSON استخراج و با استفاده از \texttt{SharedViewModel} در \texttt{SharedPreferences} ذخیره می‌شوند. این توکن‌ها برای درخواست‌های بعدی به سرور استفاده خواهند شد. سپس برنامه کاربر را به \texttt{MainActivity} هدایت می‌کند و اکتیویتی فعلی را می‌بندد تا از دسترسی غیرمجاز به اطلاعات جلوگیری شود.
+	
+	\item \textbf{مدیریت خطا:} در صورت بروز خطای سمت سرور (مانند نام کاربری یا رمز عبور نامعتبر)، یک پیام خطای واضح به صورت \texttt{Toast} به کاربر نمایش داده می‌شود تا از تجربه ناموفق خود آگاه شود.
+\end{itemize}
+\begin{note}{مسیر\lr{ Layout Resource File}:}
+	\begin{latin}
+		« app\textbackslash src\textbackslash main\textbackslash res\textbackslash layout\textbackslash activity\_register.xml »
+	\end{latin}
+\end{note}
+\subsubsection{ProfileActivity}
+\texttt{ProfileActivity} به کاربر امکان مشاهده جزئیات پروفایل و کنترل جلسه خود را می‌دهد. این اکتیویتی نشان‌دهنده نحوه استفاده از توکن‌های احراز هویت برای دسترسی به اطلاعات حفاظت‌شده است. با کلیک بر علامت آدمک در خط بالای صفحه اصلی میتوان وارد این بخش شد.
+
+\begin{itemize}
+	\item \textbf{دریافت اطلاعات پروفایل:} متد \texttt{fetchProfile()} مسئولیت دریافت اطلاعات کاربر را بر عهده دارد. این متد با استفاده از \texttt{access token} ذخیره‌شده، یک درخواست \texttt{GET} به نقطه پایانی \texttt{/auth/profile/} ارسال می‌کند. این رویکرد تضمین می‌کند که فقط کاربران احراز هویت‌شده به اطلاعات خود دسترسی داشته باشند.
+	
+	\item \textbf{نمایش اطلاعات:} اطلاعات دریافتی (مانند شماره تلفن و نقش کاربری) در کامپوننت‌های سفارشی \texttt{ProfileInfoItemView} نمایش داده می‌شوند. این استفاده از ویوهای سفارشی، به یکپارچگی و طراحی منسجم رابط کاربری کمک می‌کند.
+	
+	\item \textbf{خروج امن:} متد \texttt{performLogout()} فرآیند خروج امن را مدیریت می‌کند. این متد با ارسال \texttt{refresh token} به نقطه پایانی \texttt{/auth/logout/}، توکن‌ها را در سرور باطل می‌کند. سپس با استفاده از \texttt{SharedViewModel}، تمام توکن‌ها و وضعیت ثبت‌نام (\texttt{isRegistered}) را از حافظه محلی دستگاه حذف می‌کند.
+	
+	\item \textbf{قطع سرویس پس‌زمینه:} پس از خروج موفق، \texttt{MyForegroundService} متوقف می‌شود تا جمع‌آوری داده‌ها به پایان برسد. سپس کاربر به صفحه \texttt{RegisterActivity} هدایت می‌شود و فرآیند ورود مجدد آغاز می‌گردد. این کار امنیت داده‌ها و حریم خصوصی کاربر را تضمین می‌کند.
+\end{itemize}
+\begin{note}{مسیر\lr{ Layout Resource File}:}
+	\begin{latin}
+		« app\textbackslash src\textbackslash main\textbackslash res\textbackslash layout\textbackslash activity\_profile.xml »
+	\end{latin}
+\end{note}
+\subsection{UI : Fragments}
+
+
+در این بخش، به جزئیات هر فرگمنت که در \texttt{MainActivity} نمایش داده می‌شود، پرداخته می‌شود.
+
+\subsubsection{InformationFragment}
+
+
+\texttt{InformationFragment} یکی از مهم‌ترین بخش‌های رابط کاربری اپلیکیشن است که وظیفه 
+\textbf{نمایش اطلاعات لحظه‌ای} مربوط به موقعیت مکانی و جزئیات فنی شبکه تلفن همراه را بر عهده دارد. 
+این فرگمنت با استفاده از معماری \lr{MVVM (Model-View-ViewModel)} پیاده‌سازی شده و داده‌ها را 
+به صورت مستقیم از لایه‌های \texttt{utils} و \texttt{viewmodels} دریافت می‌کند.
+
+\paragraph{پیاده‌سازی و عملکرد}
+
+\begin{itemize}
+	\item \textbf{اتصال به ViewModelها}: این فرگمنت به دو \lr{ViewModel} متصل می‌شود:
+	\begin{itemize}
+		\item \texttt{InformationViewModel}: یک \lr{ViewModel} محلی که برای مدیریت داده‌های مربوط به خود فرگمنت (مانند متن دکمه) استفاده می‌شود.
+		\item \texttt{SharedViewModel}: یک \lr{ViewModel} مشترک که برای بررسی وضعیت احراز هویت کاربر (\texttt{isRegistered}) و دسترسی به داده‌های عمومی مانند \lr{Base URL} استفاده می‌شود.
+	\end{itemize}
+	
+\item\textbf{بروزرسانی لحظه‌ای}: برای نمایش اطلاعات لحظه‌ای، از یک \texttt{Handler} و \texttt{Runnable} استفاده شده است. 
+	متد زیر هر یک ثانیه اجرا می‌شود تا اطلاعات جدید مکان و شبکه را جمع‌آوری و روی \lr{UI} نمایش دهد.
+	\begin{lstlisting}[mathescape=true]
+private fun updateLocationAndNetworkInfo() {
+	LocationUtils.getCurrentLocation(requireContext()) { location ->
+		if (location != null) {
+			latitude = location.latitude
+			longitude = location.longitude
+			binding.latitudeText.text = "$latitude"
+			binding.longitudeText.text = "$longitude"
+		} else {
+			binding.latitudeText.text = "-"
+			binding.longitudeText.text = "-"
+		}
+	}
+	binding.cellinfoTable.removeAllViews()
+	val (_, cellJson) = NetworkUtils.getCellInfoText(requireContext())
+	addCellInfoToTable(cellJson)
+}
+	\end{lstlisting}
+
+	
+	\item \textbf{مدیریت وضعیت کاربر}: قبل از نمایش اطلاعات، فرگمنت وضعیت \texttt{isRegistered} را بررسی می‌کند. 
+	اگر کاربر احراز هویت نشده باشد، کارت‌های نمایش اطلاعات (\texttt{locationCard} و \texttt{dataCard}) مخفی شده و یک پیام خطا نمایش داده می‌شود.
+	
+	\item \textbf{نمایش اطلاعات}:
+	\begin{itemize}
+		\item \textbf{موقعیت مکانی}: مختصات جغرافیایی (\texttt{latitude, longitude}) با استفاده از \texttt{LocationUtils.getCurrentLocation()} دریافت و نمایش داده می‌شود.
+		\item \textbf{اطلاعات شبکه}: جزئیات فنی شبکه با استفاده از \texttt{NetworkUtils.getCellInfoText()} دریافت شده و به صورت پویا در یک \lr{TableLayout} قرار می‌گیرند.
+	\end{itemize}
+	
+	\item \textbf{تعامل با نقشه‌ها}: دکمه \lr{Open in Map} یک \texttt{Intent} ایجاد می‌کند تا مختصات روی نقشه \lr{OpenStreetMap (OSM)} نمایش داده شود.
+\end{itemize}
+
+\paragraph{نمایش داده‌های پویا در جدول}
+
+\begin{itemize}
+	\item \textbf{تولید جدول پویا}: متد \texttt{addCellInfoToTable()} برای هر زوج کلید-مقدار یک سطر جدید در \lr{TableLayout} ایجاد می‌کند.
+	\item \textbf{قالب‌بندی خوانا}: متد \texttt{createTableRow()} دو \texttt{TextView} (یکی برای برچسب و دیگری برای مقدار) در یک سطر قرار می‌دهد تا اطلاعات به صورت شفاف نمایش داده شوند.
+\end{itemize}
+
+\paragraph{مدیریت چرخه حیات فرگمنت}
+
+\begin{itemize}
+	\item \texttt{onCreateView()}: ساخت \lr{View} فرگمنت و شروع بروزرسانی‌های دوره‌ای.
+	\item \texttt{onDestroyView()}: حذف \texttt{Runnable} از \texttt{Handler} برای جلوگیری از \lr{Memory Leak} و تنظیم \texttt{\_binding = null} برای کمک به \lr{Garbage Collection}.
+\end{itemize}
+\begin{note}{مسیر\lr{ Layout Resource File}:}
+	\begin{latin}
+		« app\textbackslash src\textbackslash main\textbackslash res\textbackslash layout\textbackslash fragment\_information.xml »
+	\end{latin}
+\end{note}
+
+\subsubsection{SettingFragment}
+\texttt{SettingFragment} یک فرگمنت کلیدی در رابط کاربری اپلیکیشن است که به کاربر امکان تعریف آستانه‌ها و مقادیر رنگی برای نمایش کیفیت سیگنال شبکه‌های مختلف را می‌دهد. 
+این فرگمنت با فراهم کردن یک واسط کاربری پویا، امکان \textbf{شخصی‌سازی نمایش داده‌های فنی} را به صورت بصری فراهم می‌سازد.
+
+\paragraph{پیاده‌سازی و عملکرد}
+
+\begin{itemize}
+	\item \textbf{اسپینرها (\lr{Spinners})}: این فرگمنت دارای سه \lr{Spinner} وابسته به هم است:
+	\begin{itemize}
+		\item \texttt{spinnerTech}: انتخاب نوع شبکه 2G، 3G، 4G، 5G.
+		\item \texttt{spinnerType}: بر اساس انتخاب تکنولوژی، گزینه‌های مربوط به نوع سیگنال (مانند \texttt{rsrp} یا \texttt{rsrq} برای (4G را بارگذاری می‌کند.
+		\item \texttt{spinnerNumber}: انتخاب تعداد سطوح رنگی (از 3 تا 50)، که به صورت مستقیم بر تعداد باکس‌های رنگی قابل تعریف تأثیر دارد.
+	\end{itemize}
+	
+	\item \textbf{انتخاب رنگ}: با استفاده از انتخابگر رنگ، رنگ انتخاب‌شده در متغیر \texttt{currentColor} ذخیره می‌شود. 
+	کاربر می‌تواند با کلیک روی دکمه مربوطه، دیالوگ \texttt{showLevelInputDialog()} را برای ثبت جزئیات سطح رنگ فراخوانی کند.
+	
+	\item \textbf{دیالوگ ورودی سطح}: متد \texttt{showLevelInputDialog()} یک دیالوگ سفارشی نمایش می‌دهد که شامل ورودی‌های سطح، حداقل و حداکثر است. 
+	این متد ورودی‌ها را اعتبارسنجی کرده و امکان ویرایش مقادیر سطح‌های قبلی را نیز فراهم می‌کند. این متد شروط صلاحیت هر یک از این ورودی ها را نیز به عهده دارد.
+	
+	\item \textbf{به‌روزرسانی رابط کاربری}: متد \texttt{updateColorViews()} برای هر سطح، یک ویو جدید ایجاد کرده و رنگ و سطح آن را نمایش می‌دهد. 
+	همچنین برای هر ویو یک \texttt{OnClickListener} تعریف می‌شود تا کاربر بتواند در صورت نیاز وارد حالت ویرایش شود.
+\end{itemize}
+
+\paragraph{ارتباط با سرور و منطق تجاری}
+
+\begin{itemize}
+	\item \textbf{ثبت نهایی}: دکمه \textbf{ثبت نهایی} توسط متد \texttt{createAndSetupFinalizeButton()} ایجاد می‌شود. 
+	این متد پیش از ارسال، داده‌های کاربر را اعتبارسنجی کرده و در قالب \lr{JSON} آماده می‌کند.
+	
+	\item \textbf{ارسال داده‌ها}: متد \texttt{Final\_send()} مسئول ارسال داده‌ها به سرور است. 
+	این متد با استفاده از \texttt{SharedViewModel}، توکن احراز هویت و \lr{Base URL} را دریافت کرده و از کتابخانه \lr{OkHttp} برای ارسال درخواست \texttt{POST} به نقطه پایانی \texttt{/thresholds/create/} استفاده می‌کند. 
+	
+	\item \textbf{بازخورد به کاربر}: در صورت موفقیت، یک پیام \texttt{Toast} نمایش داده شده و رابط کاربری ریست می‌شود.
+\end{itemize}
+
+\paragraph{مدیریت چرخه حیات فرگمنت}
+
+\begin{itemize}
+	\item \texttt{onCreateView()}: ایجاد رابط کاربری و انجام تنظیمات اولیه.
+	\item \texttt{onDestroyView()}: آزادسازی منابع و تنظیم \texttt{\_binding = null} برای جلوگیری از \lr{Memory Leak}.
+\end{itemize}
+
+\begin{note}{مسیر\lr{ Layout Resource File}:}
+	\begin{latin}
+		« app\textbackslash src\textbackslash main\textbackslash res\textbackslash layout\textbackslash fragment\_setting.xml »
+	\end{latin}
+\end{note}
+\subsubsection{TestsFragment}
+
+\texttt{TestsFragment} یکی از فرگمنت‌های اصلی اپلیکیشن است که به کاربر امکان اجرای تست‌های عملکردی شبکه و سرویس‌های موبایل را می‌دهد. 
+این فرگمنت با فراهم کردن یک واسط کاربری ساده، تست‌های مختلفی مانند پینگ، سرعت آپلود/دانلود و تأخیر پیامک را به صورت خودکار و زمان‌بندی‌شده انجام می‌دهد.
+
+\paragraph{پیاده‌سازی و عملکرد}
+
+\begin{itemize}
+	\item \textbf{رابط کاربری تعاملی}: این فرگمنت دارای دکمه‌هایی برای هر تست (پینگ، وب، آپلود، دانلود، DNS و SMS) است. با کلیک روی هر دکمه، تست مربوطه آغاز می‌شود.
+	\item \textbf{مدیریت وضعیت دکمه‌ها}: متد \texttt{setAllButtonsEnabled()} وضعیت فعال یا غیرفعال بودن تمام دکمه‌ها را مدیریت می‌کند. هنگام اجرای یک تست، تمام دکمه‌ها غیرفعال می‌شوند تا از اجرای همزمان چند تست جلوگیری شود.
+	\item \textbf{بروزرسانی زنده رابط کاربری}: با استفاده از \texttt{LiveData} و \texttt{testsViewModel}، نتایج تست‌ها به صورت لحظه‌ای روی UI نمایش داده می‌شود. این طراحی باعث می‌شود که UI حتی در تست‌های طولانی نیز پاسخگو باقی بماند.
+\end{itemize}
+
+\paragraph{اجرای تست‌ها و منطق مربوطه}
+
+\begin{itemize}
+	\item \textbf{متد \texttt{startRepeatedTest()}}: هسته اصلی اجرای تست‌ها است.
+	\begin{itemize}
+		\item \textbf{زمان‌بندی}: با استفاده از \texttt{lifecycleScope} و \lr{Coroutines}، تست انتخاب‌شده را به مدت 2 دقیقه و با فاصله زمانی 10 ثانیه تکرار می‌کند.
+		\item \textbf{همگامی با UI}: عملیات شبکه در \texttt{Dispatchers.IO} اجرا شده و سپس نتایج با \texttt{Dispatchers.Main} به UI منتقل می‌شوند تا از مسدود شدن رابط کاربری جلوگیری شود.
+	\end{itemize}
+	\item \textbf{تست‌های مختلف}:
+	\begin{itemize}
+		\item \texttt{performPingTest()}: ارسال پینگ به آدرس \lr{8.8.8.8}و محاسبه زمان پاسخ.
+		\item \texttt{testWebResponseTime()}: محاسبه زمان اتصال به \texttt{https://www.google.com/search?q=google.com}.
+		\item \texttt{testUploadSpeed()}: اندازه‌گیری سرعت آپلود داده به سرور تستی.
+		\item \texttt{testDownloadSpeed()}: اندازه‌گیری سرعت دانلود از سرور تستی.
+		\item \texttt{testDnsTime()}: محاسبه زمان پاسخ DNS برای \texttt{www.google.com}.
+		\item \texttt{testSmsDeliveryDelay()}: محاسبه زمان تأخیر ارسال/دریافت پیامک با استفاده از \texttt{SmsDeliveryTester} و مدیریت ناهمگام با \lr{Coroutines}.
+	\end{itemize}
+\end{itemize}
+
+\paragraph{مدیریت داده و ارتباط با سرور}
+
+\begin{itemize}
+	\item \textbf{ارتباط با \texttt{SharedViewModel}}: برای دسترسی به \lr{Base URL} و \lr{Access Token} از \texttt{SharedViewModel} استفاده می‌شود تا مدیریت داده‌های مشترک متمرکز باشد.
+	\item \textbf{ارسال نتایج به بک‌اند}: متد \texttt{sendTestResultToBackend()} نتایج تست‌ها را در قالب درخواست \texttt{POST} و با فرمت \lr{JSON} به سرور ارسال می‌کند. 
+	احراز هویت از طریق \texttt{Bearer Token} انجام می‌شود. این کار امکان ذخیره‌سازی و تحلیل نتایج در سمت سرور را فراهم می‌کند.
+	\item \textbf{مدیریت چرخه حیات}: در متد \texttt{onDestroyView()}، ارجاع \texttt{binding} برابر \texttt{null} قرار داده می‌شود تا از \lr{Memory Leak} جلوگیری گردد.
+\end{itemize}
+\begin{note}{مسیر\lr{ Layout Resource File}:}
+	\begin{latin}
+	« app\textbackslash src\textbackslash main\textbackslash res\textbackslash layout\textbackslash fragment\_tests.xml »
+	\end{latin}
+\end{note}
+
+\subsection{customViews :  ProfileInfoItemView}
+
+
+\textbf{ProfileInfoItemView} یک کامپوننت UI سفارشی است که به منظور نمایش یکپارچه اطلاعات کاربر (مانند نام کاربری، رمز عبور یا نقش) در صفحه \textit{ProfileActivity} طراحی شده است. این رویکرد به کدنویسی تمیزتر و قابل نگهداری کمک می‌کند، زیرا از تکرار کد مربوط به طراحی ویوهای مشابه جلوگیری می‌کند. همچنین به این روش، در صورت نیاز،  گسترش این بخش ساده تر می شود.
+
+\subsection*{۱. پیاده‌سازی و ساختار}
+\begin{itemize}
+	\item \textbf{کلاس:} این ویو از کلاس پایه \texttt{LinearLayout} ارث‌بری می‌کند و می‌تواند عناصر داخلی خود را به صورت خطی (افقی یا عمودی) سازماندهی کند.
+	\item \textbf{اتصال به طرح‌بندی:} در بلوک \texttt{init}، فایل XML مربوط به طرح‌بندی (\texttt{R.layout.profile\_info\_item}) با استفاده از \texttt{LayoutInflater} به ویو متصل می‌شود.
+	\item \textbf{دریافت ویژگی‌های XML:} با استفاده از \texttt{context.obtainStyledAttributes}، ویو می‌تواند ویژگی‌های سفارشی تعریف شده در فایل XML مانند \texttt{app:icon} یا \texttt{app:text} را بخواند و ظاهر ویو را از طریق XML سفارشی‌سازی کند.
+\end{itemize}
+
+\subsection*{۲. عملکرد و قابلیت‌های کلیدی}
+\begin{itemize}
+	\item \textbf{قابلیت استفاده مجدد:} توسعه‌دهنده می‌تواند به جای تکرار کد، از تگ 
+	\texttt{<com.example.Havanet.customviews.ProfileInfoItemView>} در XML استفاده کند.
+	\item \textbf{کپسوله‌سازی منطق:} منطق مربوط به نمایش آیکون و متن داخل کلاس قرار دارد و کد \textit{ProfileActivity} تمیزتر می‌شود.
+	\item \textbf{متدهای عمومی:}
+	\begin{itemize}
+		\item \texttt{setValue(value: String)}: تنظیم متن ویو از طریق کد Kotlin/Java.
+		\item \texttt{getValue()}: دریافت متن فعلی ویو برای ذخیره یا استفاده از اطلاعات.
+	\end{itemize}
+\end{itemize}
+
+\begin{note}{مسیر\lr{ Layout Resource File}:}
+	\begin{latin}
+		« app\textbackslash src\textbackslash main\textbackslash res\textbackslash layout\textbackslash profile\_info\_item.xml »
+	\end{latin}
+\end{note}
+\begin{figure}[ht]
+	\centering
+	\begin{subfigure}[b]{0.3\textwidth}\centering
+	\includegraphics[width=0.7\textwidth,height=10cm,keepaspectratio]{Pic/signup}
+		\caption{ورود/ثبت نام}
+		\label{fig:auth}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.3\textwidth}\centering
+	\includegraphics[width=0.7\textwidth,height=10cm,keepaspectratio]{Pic/test}
+		\caption{تست ها}
+		\label{fig:test}
+	\end{subfigure}\\*[5mm]
+	\begin{subfigure}[b]{0.3\textwidth}\centering
+	\includegraphics[width=0.7\textwidth,height=10cm,keepaspectratio]{Pic/info}
+		\caption{اطلاعات}
+		\label{fig:info}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.3\textwidth}\centering
+	\includegraphics[width=0.7\textwidth,height=10cm,keepaspectratio]{Pic/setting}
+		\caption{تنظیمات}
+		\label{fig:setting}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.3\textwidth}\centering
+		\includegraphics[width=0.7\textwidth,height=10cm,keepaspectratio]{Pic/profile}
+		\caption{حساب کاربری}
+		\label{fig:signup}
+	\end{subfigure}
+	\caption{تصاویر صفحات نام برده شده}
+	\label{fig:androidPages}
+\end{figure}
+
+
  
 \end{document}
 

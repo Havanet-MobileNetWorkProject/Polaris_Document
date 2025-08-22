@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2025.7.2)  2 JUL 2025 21:53
+This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2025.7.2)  21 AUG 2025 19:17
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -2161,9 +2161,188 @@ LaTeX Font Info:    Font shape `TU/IRNazanin(0)/b/n' will be
 (Font)              scaled to size 17.99998pt on input line 41.
 LaTeX Font Info:    Font shape `TU/LinuxLibertine(0)/b/n' will be
 (Font)              scaled to size 15.84007pt on input line 41.
+
+Underfull \hbox (badness 10000) in paragraph at lines 46--47
+[][]
+ []
+
+Package hyperref Info: bookmark level for unknown lstlisting defaults to 0 on i
+nput line 52.
+
+Overfull \hbox (25.0pt too wide) in paragraph at lines 52--52
+[][] [][]
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 52--52
+[][]
+ []
+
+LaTeX Font Info:    Font shape `TU/IRNazanin(0)/m/n' will be
+(Font)              scaled to size 10.0pt on input line 54.
 [4
 
 ]
+Overfull \hbox (30.38246pt too wide) in paragraph at lines 72--74
+[]\TU/IRNazanin(0)/m/n/10 این کلاس یک واسط ساده برای دریافت آخرین موقعیت مکانی 
+کاربر فراهم می‌کند. ابتدا وجود مجوزهای لازم از \TU/lmtt/m/n/10 PermissionsUtils
+[]
+ []
+
+
+Overfull \hbox (25.0pt too wide) in paragraph at lines 75--75
+[][] [][]
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 75--75
+[][]
+ []
+
+
+Overfull \hbox (10.50328pt too wide) in paragraph at lines 99--101
+[]\TU/lmtt/m/n/10 TelephonyManager.networkType \TU/IRNazanin(0)/m/n/10 به نام‌ه
+ای متناظر شبکه (مثل “LTE“، “۵G“، “HSPA+“ و غیره) ترجمه می‌شوند. []
+ []
+
+
+Overfull \hbox (46.99997pt too wide) in paragraph at lines 102--102
+[][] [][]
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 102--102
+[][]
+ []
+
+[5]
+Missing character: There is no ن (U+0646) in font [lmmono10-regular]:!
+Missing character: There is no ا (U+0627) in font [lmmono10-regular]:!
+Missing character: There is no م (U+0645) in font [lmmono10-regular]:!
+Missing character: There is no ش (U+0634) in font [lmmono10-regular]:!
+Missing character: There is no خ (U+062E) in font [lmmono10-regular]:!
+Missing character: There is no ص (U+0635) in font [lmmono10-regular]:!
+LaTeX Font Info:    Font shape `TU/IRNazanin(0)/m/n' will be
+(Font)              scaled to size 16.25003pt on input line 122.
+File: images/icon/note.png Graphic file (type bmp)
+<images/icon/note.png>
+
+Overfull \hbox (19.27072pt too wide) in paragraph at lines 134--137
+ [][][][][] 
+ []
+
+[6]
+Overfull \hbox (25.0pt too wide) in paragraph at lines 141--141
+[][] [][]
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 141--141
+[][]
+ []
+
+[7]
+LaTeX Font Info:    Font shape `TU/lmtt/bx/n' in size <10> not available
+(Font)              Font shape `TU/lmtt/b/n' tried instead on input line 188.
+LaTeX Font Info:    Font shape `TU/IRNazanin(0)/m/it' will be
+(Font)              scaled to size 12.5pt on input line 203.
+ [8]
+Overfull \hbox (34.7748pt too wide) in paragraph at lines 208--209
+[][]\TU/IRNazanin(0)/b/n/10 زمان‌بندی هوشمند: \TU/IRNazanin(0)/m/n/10 در زمان ر
+اه‌اندازی، سرویس یک \TU/IRNazanin(0)/m/it/10 Handler \TU/IRNazanin(0)/m/n/10 را
+ فعال می‌کند که هر ۱۰ ثانیه یک بار متد \TU/lmtt/m/n/10 collectAndSendData()[]
+ []
+
+
+Overfull \hbox (12.91933pt too wide) in paragraph at lines 214--215
+[][]\TU/IRNazanin(0)/b/n/10 مدیریت پیکربندی: \TU/IRNazanin(0)/m/n/10 آدرس سرور 
+و توکن احراز هویت به صورت پویا از یک \TU/lmtt/m/n/10 SharedViewModel \TU/IRNaza
+nin(0)/m/n/10 بارگذاری می‌شوند که نشان‌دهنده[]
+ []
+
+File: images/icon/note.png Graphic file (type bmp)
+<images/icon/note.png>
+[9]
+File: images/icon/note.png Graphic file (type bmp)
+<images/icon/note.png>
+
+Overfull \hbox (2.74867pt too wide) in paragraph at lines 260--261
+[][]\TU/IRNazanin(0)/b/n/10 نمایش اطلاعات: \TU/IRNazanin(0)/m/n/10 اطلاعات دریا
+فتی (مانند شماره تلفن و نقش کاربری) در کامپوننت‌های سفارشی \TU/lmtt/m/n/10 Prof
+ileInfoItemView[]
+ []
+
+[10]
+File: images/icon/note.png Graphic file (type bmp)
+<images/icon/note.png>
+
+Overfull \hbox (9.93178pt too wide) in paragraph at lines 290--291
+[][]\TU/lmtt/m/n/10 SharedViewModel\TU/IRNazanin(0)/m/n/10 : یک []\TU/LinuxLibe
+rtine(0)/m/n/10 ViewModel[] \TU/IRNazanin(0)/m/n/10 مشترک که برای بررسی وضعیت ا
+حراز هویت کاربر (\TU/lmtt/m/n/10 isRegistered\TU/IRNazanin(0)/m/n/10 ) و دسترسی
+[]
+ []
+
+[11]
+Overfull \hbox (42.72618pt too wide) in paragraph at lines 320--321
+[][]\TU/IRNazanin(0)/b/n/10 موقعیت مکانی\TU/IRNazanin(0)/m/n/10 : مختصات جغرافی
+ایی (\TU/lmtt/m/n/10 latitude, longitude\TU/IRNazanin(0)/m/n/10 ) با استفاده از
+ \TU/lmtt/m/n/10 LocationUtils.getCurrentLocation()[]
+ []
+
+
+Overfull \hbox (1.57588pt too wide) in paragraph at lines 330--331
+[][]\TU/IRNazanin(0)/b/n/10 تولید جدول پویا\TU/IRNazanin(0)/m/n/10 : متد \TU/lm
+tt/m/n/10 addCellInfoToTable() \TU/IRNazanin(0)/m/n/10 برای هر زوج کلید-مقدار ی
+ک سطر جدید در []\TU/LinuxLibertine(0)/m/n/10 TableLayout[] \TU/IRNazanin(0)/m/n
+/10 ایجاد می‌کند. []
+ []
+
+File: images/icon/note.png Graphic file (type bmp)
+<images/icon/note.png>
+[12]
+Overfull \hbox (27.75023pt too wide) in paragraph at lines 376--378
+[]\TU/IRNazanin(0)/m/n/10 احراز هویت و []\TU/LinuxLibertine(0)/m/n/10 Base URL[
+] \TU/IRNazanin(0)/m/n/10 را دریافت کرده و از کتابخانه []\TU/LinuxLibertine(0)/
+m/n/10 OkHttp[] \TU/IRNazanin(0)/m/n/10 برای ارسال درخواست \TU/lmtt/m/n/10 POST
+ \TU/IRNazanin(0)/m/n/10 به نقطه پایانی \TU/lmtt/m/n/10 /thresholds/create/[]
+ []
+
+File: images/icon/note.png Graphic file (type bmp)
+<images/icon/note.png>
+[13]
+Overfull \hbox (3.8014pt too wide) in paragraph at lines 403--404
+[][]\TU/IRNazanin(0)/b/n/10 مدیریت وضعیت دکمه‌ها\TU/IRNazanin(0)/m/n/10 : متد \
+TU/lmtt/m/n/10 setAllButtonsEnabled() \TU/IRNazanin(0)/m/n/10 وضعیت فعال یا غیر
+فعال بودن تمام دکمه‌ها را مدیریت می‌کند.[]
+ []
+
+[14]
+File: images/icon/note.png Graphic file (type bmp)
+<images/icon/note.png>
+
+Overfull \hbox (83.10414pt too wide) in paragraph at lines 454--456
+[][]\TU/IRNazanin(0)/b/n/10 قابلیت استفاده مجدد: \TU/IRNazanin(0)/m/n/10 توسعه‌
+دهنده می‌تواند به جای تکرار کد، از تگ \TU/lmtt/m/n/10 <com.example.Havanet.cust
+omviews.ProfileInfoItemView>[]
+ []
+
+[15]
+File: images/icon/note.png Graphic file (type bmp)
+<images/icon/note.png>
+File: Pic/signup.jpg Graphic file (type bmp)
+<Pic/signup.jpg>
+LaTeX Font Info:    Font shape `TU/IRNazanin(0)/m/n' will be
+(Font)              scaled to size 11.25pt on input line 473.
+File: Pic/test.jpg Graphic file (type bmp)
+<Pic/test.jpg>
+File: Pic/info.jpg Graphic file (type bmp)
+<Pic/info.jpg>
+File: Pic/setting.jpg Graphic file (type bmp)
+<Pic/setting.jpg>
+File: Pic/profile.jpg Graphic file (type bmp)
+<Pic/profile.jpg>
+ [16]
 فصل 4.
 
 Package fontspec Info: IRNazanin scale = 1.25.
@@ -2173,7 +2352,7 @@ Package glossaries Warning: No \printglossary or \printglossaries found.
 (Remove \makeglossaries if you don't want any glossaries.) 
 This document will not have a glossary.
 
-[5
+[17
 
 ] (./mainRep.aux)
  ***********
@@ -2181,15 +2360,15 @@ LaTeX2e <2023-11-01> patch level 1
 L3 programming layer <2024-02-20>
  ***********
 Package rerunfilecheck Info: File `mainRep.out' has not changed.
-(rerunfilecheck)             Checksum: 3812F0B96C349FC3CC8C4F485703DA60;1114.
+(rerunfilecheck)             Checksum: 21F4372955878F9CD46BBFFEC081F8F4;2207.
  ) 
 Here is how much of TeX's memory you used:
- 39362 strings out of 474773
- 773896 string characters out of 5761290
- 1923842 words of memory out of 5000000
- 60591 multiletter control sequences out of 15000+600000
- 562028 words of font info for 119 fonts, out of 8000000 for 9000
+ 39570 strings out of 474773
+ 778314 string characters out of 5761290
+ 2090842 words of memory out of 5000000
+ 60785 multiletter control sequences out of 15000+600000
+ 562076 words of font info for 125 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
- 96i,9n,119p,2431b,1359s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 96i,9n,119p,2431b,1889s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on mainRep.pdf (7 pages).
+Output written on mainRep.pdf (19 pages).
