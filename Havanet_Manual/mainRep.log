@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2025.7.2)  21 AUG 2025 14:47
+This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2025.7.2)  22 AUG 2025 23:54
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -2123,7 +2123,9 @@ LaTeX Font Info:    Font shape `TU/IRNazanin(1)/b/n' will be
 (Font)              scaled to size 31.1pt on input line 25.
  (./mainRep.toc
 LaTeX Font Info:    Font shape `TU/LinuxLibertine(0)/b/n' will be
-(Font)              scaled to size 11.00006pt on input line 2.
+(Font)              scaled to size 11.00006pt on input line 1.
+LaTeX Font Info:    Font shape `TU/LinuxLibertine(0)/m/n' will be
+(Font)              scaled to size 11.00006pt on input line 18.
 )
 \tf@toc=\write11
 \openout11 = `mainRep.toc'.
@@ -2136,7 +2138,20 @@ LaTeX Font Info:    Font shape `TU/LinuxLibertine(0)/b/n' will be
 
 Package fontspec Info: IRNazanin scale = 1.25.
 
-[2
+LaTeX Font Info:    Font shape `TU/LinuxLibertine(0)/b/n' will be
+(Font)              scaled to size 27.36815pt on input line 28.
+(c:/texlive/2024/texmf-dist/tex/latex/listings/lstlang1.sty
+File: lstlang1.sty 2024/02/21 1.10 listings language file
+)
+(c:/texlive/2024/texmf-dist/tex/latex/listings/lstmisc.sty
+File: lstmisc.sty 2024/02/21 1.10 (Carsten Heinz)
+)
+(c:/texlive/2024/texmf-dist/tex/latex/listings/lstlang1.sty
+File: lstlang1.sty 2024/02/21 1.10 listings language file
+)
+LaTeX Font Info:    Font shape `TU/IRNazanin(0)/m/n' will be
+(Font)              scaled to size 10.0pt on input line 33.
+ [2
 
 
 ]
@@ -2144,68 +2159,92 @@ Package fontspec Info: IRNazanin scale = 1.25.
 
 Package fontspec Info: IRNazanin scale = 1.25.
 
-LaTeX Font Info:    Font shape `TU/LinuxLibertine(0)/b/n' will be
-(Font)              scaled to size 27.36815pt on input line 37.
+LaTeX Font Info:    Font shape `TU/IRNazanin(0)/m/n' will be
+(Font)              scaled to size 17.99998pt on input line 56.
+LaTeX Font Info:    Font shape `TU/IRNazanin(0)/b/n' will be
+(Font)              scaled to size 17.99998pt on input line 56.
+File: Pic/signup_front.png Graphic file (type bmp)
+<Pic/signup_front.png>
+LaTeX Font Info:    Font shape `TU/IRNazanin(0)/m/n' will be
+(Font)              scaled to size 11.25pt on input line 61.
+File: Pic/sidebar.png Graphic file (type bmp)
+<Pic/sidebar.png>
+File: Pic/dashboard.png Graphic file (type bmp)
+<Pic/dashboard.png>
 [3
 
-]
+] [4]
+File: Pic/ping.png Graphic file (type bmp)
+<Pic/ping.png>
+File: Pic/latest.png Graphic file (type bmp)
+<Pic/latest.png>
+File: Pic/param.png Graphic file (type bmp)
+<Pic/param.png>
+ [5]
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+File: Pic/traffic.png Graphic file (type bmp)
+<Pic/traffic.png>
+[6]
+File: Pic/final_table.png Graphic file (type bmp)
+<Pic/final_table.png>
+File: Pic/map.png Graphic file (type bmp)
+<Pic/map.png>
+File: Pic/map2.jpg Graphic file (type bmp)
+<Pic/map2.jpg>
+ [7]
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+[8]
+LaTeX Font Info:    Font shape `TU/LinuxLibertine(0)/b/n' will be
+(Font)              scaled to size 15.84007pt on input line 168.
+File: Pic/nav_menu.png Graphic file (type bmp)
+<Pic/nav_menu.png>
+File: Pic/admin.png Graphic file (type bmp)
+<Pic/admin.png>
+ [9] [10]
 فصل 3.
 
 Package fontspec Info: IRNazanin scale = 1.25.
 
-[4
 
-]
-فصل 4.
-
-Package fontspec Info: IRNazanin scale = 1.25.
-
-LaTeX Font Info:    Font shape `TU/IRNazanin(0)/m/n' will be
-(Font)              scaled to size 17.99998pt on input line 43.
-LaTeX Font Info:    Font shape `TU/IRNazanin(0)/b/n' will be
-(Font)              scaled to size 17.99998pt on input line 43.
-LaTeX Font Info:    Font shape `TU/LinuxLibertine(0)/m/n' will be
-(Font)              scaled to size 11.00006pt on input line 45.
-
-Underfull \hbox (badness 10000) in paragraph at lines 47--48
+Underfull \hbox (badness 10000) in paragraph at lines 194--195
 [][]
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 49--50
+Underfull \hbox (badness 10000) in paragraph at lines 196--197
 [][]
  []
 
 LaTeX Font Info:    Font shape `TU/LinuxLibertine(0)/m/n' will be
-(Font)              scaled to size 8.80005pt on input line 54.
-[5
+(Font)              scaled to size 8.80005pt on input line 201.
+[11
 
 ]
 File: Pic/signup.jpg Graphic file (type bmp)
 <Pic/signup.jpg>
-LaTeX Font Info:    Font shape `TU/IRNazanin(0)/m/n' will be
-(Font)              scaled to size 11.25pt on input line 88.
-LaTeX Font Info:    Font shape `TU/IRNazanin(0)/m/n' will be
-(Font)              scaled to size 10.0pt on input line 88.
 File: Pic/login.jpg Graphic file (type bmp)
 <Pic/login.jpg>
- [6]
+ [12]
 LaTeX Font Info:    Font shape `TU/IRNazanin(0)/m/n' will be
-(Font)              scaled to size 16.25003pt on input line 129.
+(Font)              scaled to size 16.25003pt on input line 276.
 File: Pic/setting.jpg Graphic file (type bmp)
 <Pic/setting.jpg>
- [7]
+ [13]
 File: Pic/info.jpg Graphic file (type bmp)
 <Pic/info.jpg>
- [8]
+ [14]
 File: Pic/test.jpg Graphic file (type bmp)
 <Pic/test.jpg>
 
-Underfull \hbox (badness 10000) in paragraph at lines 201--206
+Underfull \hbox (badness 10000) in paragraph at lines 348--353
 [][]
  []
 
-[9]
+[15]
 File: Pic/profile.jpg Graphic file (type bmp)
 <Pic/profile.jpg>
 
@@ -2214,21 +2253,21 @@ Package glossaries Warning: No \printglossary or \printglossaries found.
 (Remove \makeglossaries if you don't want any glossaries.) 
 This document will not have a glossary.
 
-[10] [11] (./mainRep.aux)
+[16] [17] (./mainRep.aux)
  ***********
 LaTeX2e <2023-11-01> patch level 1
 L3 programming layer <2024-02-20>
  ***********
 Package rerunfilecheck Info: File `mainRep.out' has not changed.
-(rerunfilecheck)             Checksum: 9751F0291FFF0FEF55B0DB9E4E07EAEC;2198.
+(rerunfilecheck)             Checksum: 0FB76016B7CA77CD680BA7168F5D558B;3696.
  ) 
 Here is how much of TeX's memory you used:
- 39533 strings out of 474773
- 777294 string characters out of 5761290
- 1933842 words of memory out of 5000000
- 60751 multiletter control sequences out of 15000+600000
- 562060 words of font info for 123 fonts, out of 8000000 for 9000
+ 39939 strings out of 474773
+ 784293 string characters out of 5761290
+ 1948842 words of memory out of 5000000
+ 61137 multiletter control sequences out of 15000+600000
+ 562068 words of font info for 124 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
  96i,9n,119p,2431b,1359s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on mainRep.pdf (13 pages).
+Output written on mainRep.pdf (19 pages).
