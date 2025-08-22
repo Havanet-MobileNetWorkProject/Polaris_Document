@@ -35,6 +35,32 @@
 
 
 \chapter{ \lr{Server-side Component}}
+\section{راهنمای راه‌اندازی \lr{Polaris Server}}
+
+برای راه‌اندازی \lr{Polaris Server}، ابتدا با دستور زیر یک \lr{Virtual Environment} بسازید:
+
+\begin{lstlisting}[language=bash]
+python -m venv venv
+\end{lstlisting}
+
+سپس با استفاده از دستور زیر تمامی پکیج‌های مورد نیاز را نصب کنید:
+
+\begin{lstlisting}[language=bash]
+pip install -r requirements.txt
+\end{lstlisting}
+
+برای اجرای برنامه، از دستور زیر استفاده کنید:
+
+\begin{lstlisting}[language=bash]
+python manage.py runserver 0.0.0.0:8000
+\end{lstlisting}
+
+برای ایجاد یک ادمین، از دستور زیر استفاده کنید:
+
+\begin{lstlisting}[language=bash]
+python manage.py createsuperuser
+\end{lstlisting}
+
 
 \chapter{ \lr{Web Application}}
 
